@@ -1,6 +1,8 @@
 # properties-comparator
 This utility provides functionality to parse and compare properties files in the format of key-value pairs. It reads properties files, compares the values for each key across multiple files, and logs the results.
 
+Utility is available as NPM Package [https://www.npmjs.com/package/properties-comparator](https://www.npmjs.com/package/properties-comparator)
+
 
 ## Link your package locally for testing:
 
@@ -13,14 +15,4 @@ This utility provides functionality to parse and compare properties files in the
 ```properties-comparator <filePath1> <filePath2>```
 
 
-## Publish the Package
-### Login to npm (if you haven't already):
-`npm login`
-
-### Publish the package:
-`npm publish`
-
-
-###  Install the Package Globally
-Once published, you (or anyone) can install the package globally using:
-`npm install -g properties-comparator`
+### Check [Documentation](DOCUMENTATION.md) for more details
