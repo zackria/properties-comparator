@@ -4,10 +4,8 @@ This utility provides functionality to parse and compare properties files in the
 Utility is available as NPM Package [https://www.npmjs.com/package/properties-comparator](https://www.npmjs.com/package/properties-comparator)
 
 
-## Link your package locally for testing:
-
-###  Test Locally 
-`npm link`
+###  Install the Package
+`npm install -g properties-comparator`
 
 
 ## Now you can run the script globally using:

@@ -1,3 +1,16 @@
+
+## Link your package locally for testing:
+
+###  Test Locally 
+`npm link`
+
+
+## Now you can run the script globally using:
+
+```properties-comparator <filePath1> <filePath2>```
+
+
+
 ## Publish the Package
 ### Login to npm (if you haven't already):
 `npm login`

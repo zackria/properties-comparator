@@ -1,6 +1,6 @@
 {
   "name": "properties-comparator",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "This utility provides functionality to parse and compare properties files in the format of key-value pairs. It reads properties files, compares the values for each key across multiple files, and logs the results.",
   "main": "index.js",
   "bin": {
