@@ -246,8 +246,3 @@ module.exports = {
   compareFiles,
   run,
 };
-
-// If the script is executed directly, run the CLI
-if (require.main === module) {
-  run();
-}

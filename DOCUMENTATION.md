@@ -1,13 +1,13 @@
-
-# Node.js Properties File Comparison Utility
+# Node.js YAML and Properties File Comparison Utility
 
 ## Overview
 
-This utility provides functionality to parse and compare properties files in the format of key-value pairs. It reads properties files, compares the values for each key across multiple files, and logs the results.
+This utility parses and compares **.properties** and **.yml or .yaml (YAML)** files. It reads each file as key-value pairs, compares the values for each key across multiple files, and logs the results.
 
 ### Features:
-- Parse properties files into key-value objects.
-- Compare key values across multiple properties files.
+- Parse **.properties** files into key-value objects.
+- Parse **.yml or .yaml** (YAML) files into flattened key-value objects (supports nested keys).
+- Compare key values across multiple files (both **.properties** and **.yml or .yaml**).
 - Log detailed comparison results, including mismatches.
 
 ---
@@ -16,7 +16,7 @@ This utility provides functionality to parse and compare properties files in the
 
 ### Prerequisites
 - Node.js installed on your system.
-- Properties files in a valid key-value format.
+- Files in valid .properties or .yaml or .yml format.
 
 ---
 
@@ -53,22 +53,10 @@ Parses a properties file and returns an object representation of the key-value p
 
 #### Example:
 ```javascript
-// Assuming properties file contains:
-// key1=value1
-// key2=value2
-
 const properties = parsePropertiesFile('/path/to/properties/file');
 console.log(properties);
 // Output: { key1: 'value1', key2: 'value2' }
 ```
-
-#### Implementation:
-- Reads the file content using `fs.readFileSync`.
-- Splits lines by `
-` or `
-`.
-- Filters out empty lines and lines starting with `#`.
-- Processes valid lines into key-value pairs.
 
 ---
 
@@ -82,15 +70,9 @@ Compares properties across multiple properties files and logs the results.
 #### Returns:
 - None. Outputs comparison results to the console.
 
-#### Behavior:
-- Parses each properties file into an object.
-- Collects all unique keys across files.
-- Compares values for each key across all files.
-- Logs whether values match or are mismatched. For mismatches, displays values for each file.
-
 #### Example:
 ```bash
-node script.js file1.properties file2.properties file3.properties
+node script.js file1.properties file2.yaml file3.yml
 ```
 
 #### Output Example:
@@ -118,6 +100,31 @@ The script expects file paths as command-line arguments:
   ```
   One or more properties files are missing. Ensure all specified properties files exist.
   ```
+
+---
+
+### Additional Functions
+
+#### `parseFile(filePath)`
+Detects file extension and parses `.properties`, `.yaml`, or `.yml` files. Returns an object with flattened key-value pairs or `{}` if unsupported.
+
+#### `parseYamlFile(filePath)`
+Parses a `.yml` or `.yaml` file into a flat key-value map. Returns an object with dot-notation keys for nested values.
+
+#### `compareFileData(filePaths)`
+Internally compares parsed data from multiple files. Returns an object with `mismatchCount` and detailed info for each key.
+
+#### `checkIfAllValuesMatch(filePaths)`
+Checks if all keys match across all provided files. Returns a boolean.
+
+#### `getMismatchFields(filePaths)`
+Returns an array of keys whose values differ across files.
+
+#### `compareFiles(filePaths)`
+Logs detailed comparison of key-value pairs across files. Prints a summary indicating mismatched keys.
+
+#### `run()`
+CLI entry point. Reads file paths, checks existence, and calls `compareFiles`.
 
 ---
 
@@ -167,6 +174,7 @@ Key: key2 - Mismatched values:
 ## Dependencies
 
 - `fs` module (Node.js File System)
+- `js-yaml` module (Node.js YAML library)
 
 ---
 
