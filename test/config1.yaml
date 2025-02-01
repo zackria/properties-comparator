@@ -1,0 +1,41 @@
+# General Application Settings
+app:
+  name: "MyApplication"
+  version: "1.0.0"
+  environment: "development"
+
+# Database Configuration
+db:
+  host: "localhost"
+  port: 3306
+  username: "root"
+  password: "password123"
+  name: "my_database"
+
+# Logging Settings
+log:
+  level: "INFO"
+  filepath: "/var/log/myapplication.log"
+
+# API Settings
+api:
+  url: "https://api.example.com"
+  timeout: 5000
+  key: "abcd1234efgh5678ijkl"
+
+# Feature Flags
+feature:
+  newUI:
+    enabled: true
+  betaFeature:
+    enabled: false
+  advancedSearch:
+    enabled: true
+
+# Email Configuration
+email:
+  host: "smtp.example.com"
+  port: 587
+  username: "noreply@example.com"
+  password: "securepassword"
+  from: "noreply@example.com"
