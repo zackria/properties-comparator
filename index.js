@@ -474,6 +474,37 @@ function run() {
   compareFiles(filePaths, options);
 }
 
+/**
+ * API function to compare properties between two files.
+ * @param {string} file1 - Path to the first file
+ * @param {string} file2 - Path to the second file
+ * @param {Object} options - Comparison options
+ * @returns {Object} Comparison results in a structured format
+ */
+async function compareProperties(file1, file2, options = {}) {
+  const filePaths = [file1, file2];
+  const comparisonData = compareFileData(filePaths);
+  
+  // Process the output based on options
+  if (options.output) {
+    if (options.json) {
+      fs.writeFileSync(options.output, JSON.stringify(comparisonData, null, 2));
+    } else {
+      const format = path.extname(options.output).toLowerCase() === '.md' ? 'markdown' : 'html';
+      const report = format === 'markdown' 
+        ? generateMarkdownReport(filePaths, comparisonData) 
+        : generateHtmlReport(filePaths, comparisonData);
+      fs.writeFileSync(options.output, report);
+    }
+    
+    if (options.verbose) {
+      console.log(`Comparison report saved to ${options.output}`);
+    }
+  }
+  
+  return comparisonData;
+}
+
 export {
   parsePropertiesFile,
   parseYamlFile,
@@ -484,6 +515,7 @@ export {
   compareFiles,
   generateHtmlReport,
   generateMarkdownReport,
+  compareProperties, // Add the new function to exports
 };
 
 // If the script is executed directly, run the CLI

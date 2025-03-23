@@ -4,11 +4,13 @@
 ###  Test Locally 
 `npm link`
 
+`npm unlink -g`
+
+`npm link properties-comparator`
 
 ## Now you can run the script globally using:
 
 ```properties-comparator <filePath1> <filePath2>```
-
 
 
 ## Publish the Package

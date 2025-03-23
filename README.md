@@ -1,54 +1,91 @@
 # properties-comparator
-This utility parses and compares **.properties** and **.yml or .yaml (YAML)** files. It reads each file as key-value pairs, compares the values for each key across multiple files, and produces detailed comparison reports.
 
-Utility is available as NPM Package [https://www.npmjs.com/package/properties-comparator](https://www.npmjs.com/package/properties-comparator)
+A powerful utility for parsing and comparing **.properties** and **.yml/.yaml** files. This tool reads files as key-value pairs, compares values across multiple files, and generates detailed comparison reports in various formats.
 
-### Features:
-- Parse **.properties** files into key-value objects.
-- Parse **.yml or .yaml** (YAML) files into flattened key-value objects (supports nested keys).
-- Compare key values across multiple files (both **.properties** and **.yml or .yaml**).
-- Generate reports in multiple formats:
+[![NPM Package](https://img.shields.io/npm/v/properties-comparator.svg)](https://www.npmjs.com/package/properties-comparator)
+
+## Features
+
+- **Multi-format Support**: Parse both **.properties** files and **.yml/.yaml** (YAML) files
+- **Nested Structure Handling**: Flatten nested YAML structures into key-value pairs
+- **Comprehensive Comparison**: Compare values across multiple files simultaneously
+- **Multiple Report Formats**:
   - Console output with color-coded highlighting
   - HTML reports with CSS styling
   - Markdown reports
-- Save reports to files or display in console
-- Flexible command-line interface with options
+- **Flexible Output Options**: Save reports to files or display in console
+- **User-friendly CLI**: Simple command-line interface with intuitive options
 
+## Installation
 
-###  Install the Package
-`npm install -g properties-comparator`
+```bash
+# Install globally
+npm install -g properties-comparator
 
+# To uninstall
+npm uninstall -g properties-comparator
+```
 
-## Now you can run the script globally using:
+## Usage
 
-```properties-comparator <filePath1> <filePath2>```
+### Basic Usage
 
+Compare two or more files:
 
-## HTML Report 
-``` properties-comparator--format html --output report.html file1.properties file2.yaml ```
+```bash
+properties-comparator <filePath1> <filePath2> [<filePath3> ...]
+```
 
-## Markdown Report 
-``` properties-comparator -f markdown -o report.md file1.properties file2.yaml ```
+### Examples
 
+Compare multiple files:
+```bash
+properties-comparator ./config1.properties ./config2.yml ./config3.properties
+```
 
-## Compiled on npm@11.1.0 & node v22.13.0
-`npm install -g npm@11.1.0`
+Generate HTML report:
+```bash
+properties-comparator -f html -o report.html ./config1.properties ./config2.yml
+```
 
-### Check [Documentation](DOCUMENTATION.md) for more details
+Generate Markdown report:
+```bash
+properties-comparator -f markdown -o report.md ./config1.properties ./config2.yml
+```
 
-## Terminal View
+### Command Options
 
-![alt text](./screenshots/TerminalTable.png)
+- `-f, --format <type>` - Report format (console, html, markdown)
+- `-o, --output <file>` - Output file for the report
+- `-h, --help` - Display help information
 
+## Report Examples
 
-## HTML View
+### Terminal View
+![Terminal Report](./screenshots/TerminalTable.png)
 
-![alt text](./screenshots/HtmlReport.png)
+### HTML View
+![HTML Report](./screenshots/HtmlReport.png)
 
-## Markdown View
+### Markdown View
+![Markdown Report](./screenshots/MarkDownReport.png)
 
-![alt text](./screenshots/MarkDownReport.png)
+## Quality Assurance
 
-## Well Tested with 90+% code coverage
+This package is thoroughly tested with over 90% code coverage to ensure reliability.
 
-![alt text](./screenshots/TestCoverage.png)
+![Test Coverage](./screenshots/TestCoverage.png)
+
+## Compatibility
+
+Developed and tested with:
+- npm v11.1.0
+- Node.js v22.13.0
+
+## Documentation
+
+For more detailed information, please check the [Documentation](DOCUMENTATION.md).
+
+## License
+
+[MIT](LICENSE)

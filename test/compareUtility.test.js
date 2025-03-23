@@ -11,6 +11,7 @@ import {
   generateHtmlReport,
   generateMarkdownReport,
   run,
+  compareProperties,
 } from "../src/compareUtility.js";
 
 // This array will store all our temporary file paths
@@ -421,6 +422,81 @@ describe("compareUtility Tests", () => {
       consoleLogMock.mockRestore();
       consoleTableMock.mockRestore();
       consoleErrorMock.mockRestore();
+    });
+  });
+
+  describe("compareProperties Tests", () => {
+    test("should compare two files and return comparison data", async () => {
+      const file1 = createTempFile(`key1=value1\nkey2=value2`, ".properties");
+      const file2 = createTempFile(`key1=value1\nkey2=value3`, ".properties");
+      
+      const result = await compareProperties(file1, file2);
+      
+      expect(result.mismatchCount).toBe(1);
+      expect(result.mismatchDetails).toHaveLength(2);
+      expect(result.mismatchDetails.find(d => d.key === 'key2').matched).toBe(false);
+    });
+
+    test("should generate JSON output when json option is true", async () => {
+      const file1 = createTempFile(`key1=value1`, ".properties");
+      const file2 = createTempFile(`key1=value1`, ".properties");
+      const outputFile = createTempFile("", ".json");
+      
+      const consoleLogMock = jest.spyOn(console, "log").mockImplementation(() => {});
+      
+      await compareProperties(file1, file2, {
+        output: outputFile,
+        json: true
+      });
+      
+      // Verify JSON was written
+      const fileContents = fs.readFileSync(outputFile, "utf8");
+      const jsonData = JSON.parse(fileContents);
+      expect(jsonData.mismatchCount).toBe(0);
+      
+      consoleLogMock.mockRestore();
+    });
+
+    test("should generate HTML output based on file extension", async () => {
+      const file1 = createTempFile(`key1=value1\nkey2=value2`, ".properties");
+      const file2 = createTempFile(`key1=value1\nkey2=value3`, ".properties");
+      const outputFile = createTempFile("", ".html");
+      
+      await compareProperties(file1, file2, { output: outputFile });
+      
+      // Verify HTML was written
+      const fileContents = fs.readFileSync(outputFile, "utf8");
+      expect(fileContents).toContain("<!DOCTYPE html>");
+      expect(fileContents).toContain("Properties Comparison Report");
+    });
+
+    test("should generate Markdown output when file has .md extension", async () => {
+      const file1 = createTempFile(`key1=value1\nkey2=value2`, ".properties");
+      const file2 = createTempFile(`key1=value1\nkey2=value3`, ".properties");
+      const outputFile = createTempFile("", ".md");
+      
+      await compareProperties(file1, file2, { output: outputFile });
+      
+      // Verify Markdown was written
+      const fileContents = fs.readFileSync(outputFile, "utf8");
+      expect(fileContents).toContain("# Properties Comparison Report");
+    });
+
+    test("should log output path when verbose option is true", async () => {
+      const file1 = createTempFile(`key1=value1`, ".properties");
+      const file2 = createTempFile(`key1=value1`, ".properties");
+      const outputFile = createTempFile("", ".html");
+      
+      const consoleLogMock = jest.spyOn(console, "log").mockImplementation(() => {});
+      
+      await compareProperties(file1, file2, {
+        output: outputFile,
+        verbose: true
+      });
+      
+      expect(consoleLogMock).toHaveBeenCalledWith(`Comparison report saved to ${outputFile}`);
+      
+      consoleLogMock.mockRestore();
     });
   });
 

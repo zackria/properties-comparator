@@ -2,10 +2,10 @@
   "name": "properties-comparator",
   "version": "1.0.5",
   "description": "This utility provides functionality to parse and compare properties files in the format of key-value pairs. It reads properties files, compares the values for each key across multiple files, and logs the results.",
-  "main": "index.js",
   "type": "module",
+  "main": "index.js",
   "bin": {
-    "properties-comparator": "./index.js"
+    "properties-comparator": "./cli.js"
   },
   "scripts": {
     "test": "jest",
@@ -17,7 +17,9 @@
   },
   "keywords": [
     "properties",
-    "comparator"
+    "compare",
+    "yaml",
+    "configuration"
   ],
   "author": "Zack Dawood",
   "license": "MIT",
@@ -27,6 +29,7 @@
   "homepage": "https://github.com/zackria/properties-comparator#readme",
   "dependencies": {
     "chalk": "^5.4.1",
+    "commander": "^13.1.0",
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {

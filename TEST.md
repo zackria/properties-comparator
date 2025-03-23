@@ -30,3 +30,33 @@ or
 `node index.js --format html --output report.html  ./test/config1.properties ./test/config2.yml`
 
 `node index.js -f markdown -o report.md ./test/config1.properties ./test/config2.yml`
+
+### NPM LINK Test
+
+`properties-comparator ./test/config1.properties ./test/config1.yaml`
+
+`properties-comparator ./test/config1.properties ./test/config2.yml`
+
+`properties-comparator ./test/config1.properties ./test/config2.properties`
+
+`properties-comparator ./test/config2.properties ./test/config2.yml`
+
+`properties-comparator ./test/config3.txt ./test/config3.yml2`
+
+`properties-comparator --format html --output report.html  ./test/config1.properties ./test/config2.yml`
+
+`properties-comparator -f markdown -o report.md ./test/config1.properties ./test/config2.yml`
+
+
+`properties-comparator ./test/config1.properties ./test/config2.yml ./test/config3.properties`
+
+`properties-comparator -v ./test/config1.properties ./test/config2.yml ./test/config3.properties`
+
+
+`properties-comparator -f html -o report.html ./test/config1.properties ./test/config1.yaml`
+
+`properties-comparator -f html -o report.html ./test/config1.properties ./test/config2.yml`
+
+`properties-comparator -f html -o report.html ./test/config1.properties ./test/config2.yml ./test/config3.properties`
+
+`properties-comparator -f markdown -o report.md ./test/config1.properties ./test/config2.yml ./test/config3.properties`
