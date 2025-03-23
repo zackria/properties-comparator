@@ -51,4 +51,4 @@ Utility is available as NPM Package [https://www.npmjs.com/package/properties-co
 
 ## Well Tested with 90+% code coverage
 
-![alt text](./screenshots/TestCoverage.png.png)
+![alt text](./screenshots/TestCoverage.png)
