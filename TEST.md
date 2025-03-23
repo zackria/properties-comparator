@@ -13,3 +13,17 @@ or
 ### Check jest.config.js for testing configuration
 
 `npm test -- --coverage`
+
+
+### Test Comparisons 
+
+`node index.js ./test/config1.properties ./test/config1.yaml`
+
+`node index.js ./test/config1.properties ./test/config2.yml`
+
+`node index.js ./test/config1.properties ./test/config2.properties`
+
+`node index.js ./test/config2.properties ./test/config2.yml`
+
+`node index.js ./test/config3.txt ./test/config3.yml2`
+

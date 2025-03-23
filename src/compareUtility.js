@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
-const fs = require("fs");
-const path = require("path");
-const yaml = require("js-yaml");
+import chalk from "chalk";
+import fs from "fs";
+import path from "path";
+import yaml from "js-yaml";
 
 /**
  * Parses a .properties file into an object.
@@ -183,7 +184,7 @@ function getMismatchFields(filePaths) {
 
 /**
  * CLI function: compares properties/keys across multiple files,
- * prints details to the console, and provides a summary.
+ * prints details to the console in a tabular format, and provides a summary.
  *
  * @param {string[]} filePaths - Array of file paths.
  */
@@ -192,15 +193,30 @@ function compareFiles(filePaths) {
 
   const { mismatchCount, mismatchDetails } = compareFileData(filePaths);
 
-  // Print detail for each key
+  // Prepare data for tabular output
+  const tableData = mismatchDetails.map(({ key, values, matched }) => {
+    const valueColumns = values.reduce((acc, value, idx) => {
+      acc[`File ${idx + 1}`] = value;
+      return acc;
+    }, {});
+    return {
+      Key: key,
+      Matched: matched ? "Yes" : "No",
+      ...valueColumns,
+    };
+  });
+
+  // Print the table
+  console.table(tableData);
+
+  // Custom print for mismatched rows
+  console.log("\n=== Highlighted Mismatched Rows ===");
   mismatchDetails.forEach(({ key, values, matched }) => {
-    if (matched) {
-      console.log(`Key: ${key} - Values match: '${values[0]}'`);
-    } else {
-      console.log(`Key: ${key} - Mismatched values:`);
-      values.forEach((value, idx) => {
-        console.log(`  File ${idx + 1} (${filePaths[idx]}): ${value}`);
-      });
+    if (!matched) {
+      const coloredValues = values.map((value, idx) =>
+        chalk.red(`File ${idx + 1}: ${value}`)
+      );
+      console.log(chalk.yellow(`Key: ${key}`), "|", coloredValues.join(" | "));
     }
   });
 
@@ -210,6 +226,10 @@ function compareFiles(filePaths) {
     console.log("All properties match across all files!");
   } else {
     console.log(`${mismatchCount} key(s) have mismatched values.`);
+    const mismatchedKeys = mismatchDetails
+      .filter((detail) => !detail.matched)
+      .map((detail) => detail.key);
+    console.log("Mismatched keys:", mismatchedKeys.join(", "));
   }
 }
 
@@ -217,26 +237,29 @@ function compareFiles(filePaths) {
  * CLI entry point for comparing .properties and .yml/.yaml files.
  */
 function run() {
-  const filePaths = process.argv.slice(2);
+  // Convert all file paths to absolute paths
+  let filePaths = process.argv.slice(2).map(fp => path.resolve(fp));
 
   if (filePaths.length === 0) {
     console.error("Please provide file paths as command-line arguments.");
     process.exit(1);
+  }else if (filePaths.length === 1) {
+    console.error("Please provide at least two file paths for comparison.");
+    process.exit(1);
   }
 
-  // Optionally, check if all files exist
   const missing = filePaths.filter((fp) => !fs.existsSync(fp));
   if (missing.length > 0) {
     console.error(`The following file(s) do not exist: ${missing.join(", ")}`);
-    // We continue anyway, or we can decide to exit.
-    // For now, let's exit to avoid unexpected comparisons:
     process.exit(1);
   }
 
   compareFiles(filePaths);
 }
 
-module.exports = {
+
+
+export {
   parsePropertiesFile,
   parseYamlFile,
   parseFile,
@@ -246,3 +269,4 @@ module.exports = {
   compareFiles,
   run,
 };
+

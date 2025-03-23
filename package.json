@@ -1,8 +1,9 @@
 {
   "name": "properties-comparator",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "This utility provides functionality to parse and compare properties files in the format of key-value pairs. It reads properties files, compares the values for each key across multiple files, and logs the results.",
   "main": "index.js",
+  "type": "module",
   "bin": {
     "properties-comparator": "./index.js"
   },
@@ -25,9 +26,14 @@
   },
   "homepage": "https://github.com/zackria/properties-comparator#readme",
   "dependencies": {
+    "chalk": "^5.4.1",
     "js-yaml": "^4.1.0"
   },
   "devDependencies": {
-    "jest": "^29.7.0"
+    "@babel/core": "^7.26.10",
+    "@babel/preset-env": "^7.26.9",
+    "babel-jest": "^29.7.0",
+    "jest": "^29.7.0",
+    "jest-environment-node": "^29.7.0"
   }
 }

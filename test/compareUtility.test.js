@@ -1,14 +1,14 @@
-const fs = require('fs');
-const path = require('path');
-const {
+import fs from "fs";
+import path from "path";
+import {
   parsePropertiesFile,
   parseYamlFile,
   parseFile,
   compareFileData,
   checkIfAllValuesMatch,
-  getMismatchFields
-  // compareFiles // We usually test the logic, not the CLI directly
-} = require('../src/compareUtility');
+  getMismatchFields,
+  run,
+} from "../src/compareUtility.js";
 
 // This array will store all our temporary file paths
 let tempFiles = [];
@@ -17,11 +17,11 @@ let tempFiles = [];
  * Helper to create temp files for testing.
  * We'll push the generated paths into `tempFiles` for cleanup.
  */
-function createTempFile(content, ext = '.properties') {
+function createTempFile(content, ext = ".properties") {
   const unique = `${Date.now()}_${Math.random()}`;
   const fileName = `test_${unique}${ext}`;
   const filePath = path.join(__dirname, fileName);
-  fs.writeFileSync(filePath, content, 'utf8');
+    fs.writeFileSync(filePath, content, "utf8");
   tempFiles.push(filePath);
   return filePath;
 }
@@ -38,127 +38,172 @@ afterAll(() => {
   }
 });
 
+describe("compareUtility Tests", () => {
+  test("parsePropertiesFile should handle valid .properties files", () => {
+    const content = `key1=value1\nkey2=value2`;
+    const file = createTempFile(content, ".properties");
+    const result = parsePropertiesFile(file);
+    expect(result).toEqual({ key1: "value1", key2: "value2" });
+  });
 
-describe('compareUtility Tests', () => {
-  
-  
-  test('compareFileData should identify mismatches correctly (basic properties)', () => {
-    const file1Content = `key1=abc\nkey2=def`;
-    const file2Content = `key1=abc\nkey2=xyz`;
+  test("parsePropertiesFile should skip comments and empty lines", () => {
+    const content = `# This is a comment\n\nkey1=value1\nkey2=value2 # Inline comment`;
+    const file = createTempFile(content, ".properties");
+    const result = parsePropertiesFile(file);
+    expect(result).toEqual({ key1: "value1", key2: "value2" });
+  });
 
-    const file1 = createTempFile(file1Content);
-    const file2 = createTempFile(file2Content);
+  test("parseYamlFile should handle valid .yaml files", () => {
+    const content = `key1: value1\nkey2:\n  nestedKey: nestedValue`;
+    const file = createTempFile(content, ".yaml");
+    const result = parseYamlFile(file);
+    expect(result).toEqual({ key1: "value1", "key2.nestedKey": "nestedValue" });
+  });
 
+  test("parseYamlFile should return empty object on invalid YAML", () => {
+    const content = `key1: value1\nkey2: { invalid_yaml`;
+    const file = createTempFile(content, ".yaml");
+    const consoleErrorMock = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    const result = parseYamlFile(file);
+    expect(result).toEqual({});
+    expect(consoleErrorMock).toHaveBeenCalledWith(
+      expect.stringContaining("Error reading/parsing YAML file"),
+      expect.stringContaining("unexpected end of the stream within a flow collection")
+    );
+    
+    consoleErrorMock.mockRestore();
+  });
+
+  test("parseFile should handle unsupported file extensions", () => {
+    const file = createTempFile("", ".txt");
+    const consoleErrorMock = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    const result = parseFile(file);
+    expect(result).toEqual({});
+    expect(consoleErrorMock).toHaveBeenCalledWith(
+      expect.stringContaining("Unsupported file extension")
+    );
+    consoleErrorMock.mockRestore();
+  });
+
+  test("compareFileData should handle identical files", () => {
+    const file1 = createTempFile(`key1=value1\nkey2=value2`, ".properties");
+    const file2 = createTempFile(`key1=value1\nkey2=value2`, ".properties");
+    const { mismatchCount, mismatchDetails } = compareFileData([file1, file2]);
+    expect(mismatchCount).toBe(0);
+    expect(mismatchDetails).toEqual([
+      { key: "key1", values: ["value1", "value1"], matched: true },
+      { key: "key2", values: ["value2", "value2"], matched: true },
+    ]);
+  });
+
+  test("compareFileData should detect mismatched keys", () => {
+    const file1 = createTempFile(`key1=value1\nkey2=value2`, ".properties");
+    const file2 = createTempFile(`key1=value1\nkey2=value3`, ".properties");
     const { mismatchCount, mismatchDetails } = compareFileData([file1, file2]);
     expect(mismatchCount).toBe(1);
-
-    const mismatch = mismatchDetails.find(m => m.key === 'key2');
-    expect(mismatch).toBeDefined();
-    expect(mismatch.matched).toBe(false);
-    expect(mismatch.values).toEqual(['def', 'xyz']);
+    expect(mismatchDetails).toEqual([
+      { key: "key1", values: ["value1", "value1"], matched: true },
+      { key: "key2", values: ["value2", "value3"], matched: false },
+    ]);
   });
 
-  test('parseFile should return an empty object for unsupported extensions', () => {
-    // Mock console.error so it does nothing
-    const consoleErrorMock = jest.spyOn(console, 'error').mockImplementation(() => {});
-  
-    try {
-      const content = 'some random content';
-      const tempFile = createTempFile(content, '.txt'); // Not supported by parseFile
-  
-      const result = parseFile(tempFile);
-      expect(result).toEqual({});
-    } finally {
-      // Restore original console.error so other tests aren't affected
-      consoleErrorMock.mockRestore();
-    }
-  });
-  
-
-  // Renamed the test to avoid duplication
-  test('compareFileData should identify mismatches correctly (another scenario)', () => {
-    // Provide content in a single line or carefully controlled multiline
-    const file1Content = `key1=abc\nkey2=def`;
-    const file2Content = `key1=abc\nkey2=xyz`;
-  
-    const file1 = createTempFile(file1Content, '.properties');
-    const file2 = createTempFile(file2Content, '.properties');
-  
-    const { mismatchCount, mismatchDetails } = compareFileData([file1, file2]);
-    expect(mismatchCount).toBe(1);
-  
-    const mismatch = mismatchDetails.find(m => m.key === 'key2');
-    expect(mismatch.matched).toBe(false);
-    expect(mismatch.values).toEqual(['def', 'xyz']);
-  });
-  
-
-  test('checkIfAllValuesMatch should return true if files match', () => {
-    const file1Content = `key1=value1\nkey2=value2`;
-    const file2Content = `key1=value1\nkey2=value2`;
-
-    const file1 = createTempFile(file1Content, '.properties');
-    const file2 = createTempFile(file2Content, '.properties');
-
+  test("checkIfAllValuesMatch should return true for matching files", () => {
+    const file1 = createTempFile(`key1=value1\nkey2=value2`, ".properties");
+    const file2 = createTempFile(`key1=value1\nkey2=value2`, ".properties");
     const result = checkIfAllValuesMatch([file1, file2]);
     expect(result).toBe(true);
   });
 
-  test('getMismatchFields should return only mismatched keys', () => {
-    const file1Content = `key1=value1\nkey2=value2`;
-    const file2Content = `key1=value1\nkey2=DIFFERENT`;
-
-    const file1 = createTempFile(file1Content, '.properties');
-    const file2 = createTempFile(file2Content, '.properties');
-
-    const mismatches = getMismatchFields([file1, file2]);
-    expect(mismatches).toEqual(['key2']);
+  test("checkIfAllValuesMatch should return false for mismatched files", () => {
+    const file1 = createTempFile(`key1=value1\nkey2=value2`, ".properties");
+    const file2 = createTempFile(`key1=value1\nkey2=value3`, ".properties");
+    const result = checkIfAllValuesMatch([file1, file2]);
+    expect(result).toBe(false);
   });
 
-});
-
-
-describe('Additional coverage tests', () => {
-  test('parsePropertiesFile should ignore lines with no "="', () => {
-    const content = `# comment\nNOSPLIT\nkey1=value1`;
-    const file = createTempFile(content, '.properties');
-    const result = parsePropertiesFile(file);
-    expect(result).toEqual({ key1: 'value1' });
+  test("getMismatchFields should return mismatched keys", () => {
+    const file1 = createTempFile(`key1=value1\nkey2=value2`, ".properties");
+    const file2 = createTempFile(`key1=value1\nkey2=value3`, ".properties");
+    const result = getMismatchFields([file1, file2]);
+    expect(result).toEqual(["key2"]);
   });
 
-  test('parseYamlFile should handle nested keys', () => {
-    const ymlContent = `level1:\n  level2:\n    key: value\n`;
-    const file = createTempFile(ymlContent, '.yml');
-    const result = parseYamlFile(file);
-    expect(result).toEqual({ 'level1.level2.key': 'value' });
+  test("run should exit with error if files are missing", () => {
+    // Force fs.existsSync to return false for any file in this test
+    const existsSyncMock = jest.spyOn(fs, "existsSync").mockImplementation(() => false);
+    const consoleErrorMock = jest.spyOn(console, "error").mockImplementation(() => {});
+    const processExitMock = jest.spyOn(process, "exit").mockImplementation(() => {});
+    const originalArgv = process.argv;
+  
+    try {
+      process.argv = ["node", "compareUtility.js", "nonexistent1.properties", "nonexistent2.yaml"];
+      run();
+    } catch {}
+  
+    // Flatten all arguments passed to console.error
+    const errorCalls = consoleErrorMock.mock.calls.flat();
+    expect(
+      errorCalls.some(msg =>
+        typeof msg === 'string' && msg.includes("The following file(s) do not exist:")
+      )
+    ).toBe(true);
+  
+    expect(processExitMock).toHaveBeenCalledWith(1);
+  
+    process.argv = originalArgv;
+    existsSyncMock.mockRestore();
+    consoleErrorMock.mockRestore();
+    processExitMock.mockRestore();
+  });
+  
+  test("run should exit with error if only one file path is provided", () => {
+    const file = createTempFile(`key1=value1\nkey2=value2`, ".properties");
+    const consoleErrorMock = jest.spyOn(console, "error").mockImplementation(() => {});
+    const processExitMock = jest.spyOn(process, "exit").mockImplementation(() => {});
+    const originalArgv = process.argv;
+  
+    try {
+      process.argv = ["node", "compareUtility.js", file];
+      run();
+    } catch {}
+  
+    expect(consoleErrorMock).toHaveBeenCalledWith(
+      "Please provide at least two file paths for comparison."
+    );
+    expect(processExitMock).toHaveBeenCalledWith(1);
+  
+    process.argv = originalArgv;
+    consoleErrorMock.mockRestore();
+    processExitMock.mockRestore();
   });
 
-  test('parseFile should parse .yml files', () => {
-    const ymlContent = `someKey: someValue`;
-    const file = createTempFile(ymlContent, '.yml');
-    const result = parseFile(file);
-    expect(result).toEqual({ someKey: 'someValue' });
+  test("run should handle valid file paths with mismatched keys", () => {
+    const file1 = createTempFile(`key1=value1\nkey2=value2`, ".properties");
+    const file2 = createTempFile(`key1=value1\nkey2=value3`, ".properties");
+    const consoleTableMock = jest.spyOn(console, "table").mockImplementation(() => {});
+    const consoleLogMock = jest.spyOn(console, "log").mockImplementation(() => {});
+    const processExitMock = jest.spyOn(process, "exit").mockImplementation(() => {});
+    const originalArgv = process.argv;
+  
+    try {
+      process.argv = ["node", "compareUtility.js", file1, file2];
+      run();
+    } catch {}
+  
+    expect(consoleTableMock).toHaveBeenCalled();
+    expect(consoleLogMock).toHaveBeenCalledWith(
+      expect.stringContaining("1 key(s) have mismatched values.")
+    );
+    expect(processExitMock).not.toHaveBeenCalled();
+  
+    process.argv = originalArgv;
+    consoleTableMock.mockRestore();
+    consoleLogMock.mockRestore();
+    processExitMock.mockRestore();
   });
-
-  test('compareFileData should detect multiple mismatches', () => {
-    const f1 = createTempFile(`a=1\nb=2`, '.properties');
-    const f2 = createTempFile(`a=1\nb=3\nc=4`, '.properties');
-    const { mismatchCount, mismatchDetails } = compareFileData([f1, f2]);
-
-    expect(mismatchCount).toBe(2);
-    expect(mismatchDetails.find(m => m.key === 'b').matched).toBe(false);
-  });
-
-  test('checkIfAllValuesMatch should return false on mismatch', () => {
-    const f1 = createTempFile(`k=1`, '.properties');
-    const f2 = createTempFile(`k=2`, '.properties');
-    expect(checkIfAllValuesMatch([f1, f2])).toBe(false);
-  });
-
-  test('getMismatchFields should handle partial key sets', () => {
-    const f1 = createTempFile(`x=1\ny=2`, '.properties');
-    const f2 = createTempFile(`x=1`, '.properties');
-    const mismatches = getMismatchFields([f1, f2]);
-    expect(mismatches).toEqual(['y']);
-  });
+  
 });
