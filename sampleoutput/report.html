@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Properties Comparison Report</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; color: #333; }
+    h1, h2 { color: #0066cc; }
+    table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    tr:nth-child(even) { background-color: #f9f9f9; }
+    tr:hover { background-color: #f2f2f2; }
+    .mismatch { background-color: #ffe6e6; }
+    .matched { background-color: #e6ffe6; }
+    .value-mismatch { color: #cc0000; font-weight: bold; }
+    .summary { margin: 20px 0; padding: 15px; border-radius: 5px; }
+    .summary.success { background-color: #e6ffe6; border: 1px solid #99cc99; }
+    .summary.error { background-color: #ffe6e6; border: 1px solid #cc9999; }
+    .file-list { margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <h1>Properties Comparison Report</h1>
+  
+  <div class="file-list">
+    <h2>Files Compared:</h2>
+    <ol>
+      <li>config1.properties <small>(/Users/zackdawood/Documents/Dev/GitHub/properties-comparator/test/config1.properties)</small></li>
+      <li>config2.yml <small>(/Users/zackdawood/Documents/Dev/GitHub/properties-comparator/test/config2.yml)</small></li>
+    </ol>
+  </div>
+
+  <h2>Comparison Results</h2>
+  <table>
+    <tr>
+      <th>Key</th>
+      <th>Matched</th>
+      <th>File 1: config1.properties</th>
+      <th>File 2: config2.yml</th>
+    </tr>
+    <tr class="matched">
+      <td>app.name</td>
+      <td>Yes</td>
+      <td class="">MyApplication</td>
+      <td class="">MyApplication</td>
+    </tr>
+    <tr class="matched">
+      <td>app.version</td>
+      <td>Yes</td>
+      <td class="">1.0.0</td>
+      <td class="">1.0.0</td>
+    </tr>
+    <tr class="matched">
+      <td>app.environment</td>
+      <td>Yes</td>
+      <td class="">development</td>
+      <td class="">development</td>
+    </tr>
+    <tr class="matched">
+      <td>db.host</td>
+      <td>Yes</td>
+      <td class="">localhost</td>
+      <td class="">localhost</td>
+    </tr>
+    <tr class="matched">
+      <td>db.port</td>
+      <td>Yes</td>
+      <td class="">3306</td>
+      <td class="">3306</td>
+    </tr>
+    <tr class="matched">
+      <td>db.username</td>
+      <td>Yes</td>
+      <td class="">root</td>
+      <td class="">root</td>
+    </tr>
+    <tr class="mismatch">
+      <td>db.password</td>
+      <td>No</td>
+      <td class="value-mismatch">password123</td>
+      <td class="value-mismatch">password321</td>
+    </tr>
+    <tr class="matched">
+      <td>db.name</td>
+      <td>Yes</td>
+      <td class="">my_database</td>
+      <td class="">my_database</td>
+    </tr>
+    <tr class="matched">
+      <td>log.level</td>
+      <td>Yes</td>
+      <td class="">INFO</td>
+      <td class="">INFO</td>
+    </tr>
+    <tr class="matched">
+      <td>log.filepath</td>
+      <td>Yes</td>
+      <td class="">/var/log/myapplication.log</td>
+      <td class="">/var/log/myapplication.log</td>
+    </tr>
+    <tr class="matched">
+      <td>api.url</td>
+      <td>Yes</td>
+      <td class="">https://api.example.com</td>
+      <td class="">https://api.example.com</td>
+    </tr>
+    <tr class="matched">
+      <td>api.timeout</td>
+      <td>Yes</td>
+      <td class="">5000</td>
+      <td class="">5000</td>
+    </tr>
+    <tr class="matched">
+      <td>api.key</td>
+      <td>Yes</td>
+      <td class="">abcd1234efgh5678ijkl</td>
+      <td class="">abcd1234efgh5678ijkl</td>
+    </tr>
+    <tr class="matched">
+      <td>feature.newUI.enabled</td>
+      <td>Yes</td>
+      <td class="">true</td>
+      <td class="">true</td>
+    </tr>
+    <tr class="matched">
+      <td>feature.betaFeature.enabled</td>
+      <td>Yes</td>
+      <td class="">false</td>
+      <td class="">false</td>
+    </tr>
+    <tr class="matched">
+      <td>feature.advancedSearch.enabled</td>
+      <td>Yes</td>
+      <td class="">true</td>
+      <td class="">true</td>
+    </tr>
+    <tr class="matched">
+      <td>email.host</td>
+      <td>Yes</td>
+      <td class="">smtp.example.com</td>
+      <td class="">smtp.example.com</td>
+    </tr>
+    <tr class="matched">
+      <td>email.port</td>
+      <td>Yes</td>
+      <td class="">587</td>
+      <td class="">587</td>
+    </tr>
+    <tr class="matched">
+      <td>email.username</td>
+      <td>Yes</td>
+      <td class="">noreply@example.com</td>
+      <td class="">noreply@example.com</td>
+    </tr>
+    <tr class="matched">
+      <td>email.password</td>
+      <td>Yes</td>
+      <td class="">securepassword</td>
+      <td class="">securepassword</td>
+    </tr>
+    <tr class="matched">
+      <td>email.from</td>
+      <td>Yes</td>
+      <td class="">noreply@example.com</td>
+      <td class="">noreply@example.com</td>
+    </tr>
+  </table>
+
+  <div class="summary error">
+    <h2>Summary</h2>
+    <p>1 key(s) have mismatched values.</p>
+    <p><strong>Mismatched keys:</strong> db.password</p>
+  </div>
+</body>
+</html>

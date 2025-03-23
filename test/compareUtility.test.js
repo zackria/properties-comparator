@@ -7,6 +7,9 @@ import {
   compareFileData,
   checkIfAllValuesMatch,
   getMismatchFields,
+  compareFiles,
+  generateHtmlReport,
+  generateMarkdownReport,
   run,
 } from "../src/compareUtility.js";
 
@@ -21,7 +24,7 @@ function createTempFile(content, ext = ".properties") {
   const unique = `${Date.now()}_${Math.random()}`;
   const fileName = `test_${unique}${ext}`;
   const filePath = path.join(__dirname, fileName);
-    fs.writeFileSync(filePath, content, "utf8");
+  fs.writeFileSync(filePath, content, "utf8");
   tempFiles.push(filePath);
   return filePath;
 }
@@ -70,9 +73,11 @@ describe("compareUtility Tests", () => {
     expect(result).toEqual({});
     expect(consoleErrorMock).toHaveBeenCalledWith(
       expect.stringContaining("Error reading/parsing YAML file"),
-      expect.stringContaining("unexpected end of the stream within a flow collection")
+      expect.stringContaining(
+        "unexpected end of the stream within a flow collection"
+      )
     );
-    
+
     consoleErrorMock.mockRestore();
   });
 
@@ -134,48 +139,65 @@ describe("compareUtility Tests", () => {
 
   test("run should exit with error if files are missing", () => {
     // Force fs.existsSync to return false for any file in this test
-    const existsSyncMock = jest.spyOn(fs, "existsSync").mockImplementation(() => false);
-    const consoleErrorMock = jest.spyOn(console, "error").mockImplementation(() => {});
-    const processExitMock = jest.spyOn(process, "exit").mockImplementation(() => {});
+    const existsSyncMock = jest
+      .spyOn(fs, "existsSync")
+      .mockImplementation(() => false);
+    const consoleErrorMock = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    const processExitMock = jest
+      .spyOn(process, "exit")
+      .mockImplementation(() => {});
     const originalArgv = process.argv;
-  
+
     try {
-      process.argv = ["node", "compareUtility.js", "nonexistent1.properties", "nonexistent2.yaml"];
+      process.argv = [
+        "node",
+        "compareUtility.js",
+        "nonexistent1.properties",
+        "nonexistent2.yaml",
+      ];
       run();
     } catch {}
-  
+
     // Flatten all arguments passed to console.error
     const errorCalls = consoleErrorMock.mock.calls.flat();
     expect(
-      errorCalls.some(msg =>
-        typeof msg === 'string' && msg.includes("The following file(s) do not exist:")
+      errorCalls.some(
+        (msg) =>
+          typeof msg === "string" &&
+          msg.includes("The following file(s) do not exist:")
       )
     ).toBe(true);
-  
+
     expect(processExitMock).toHaveBeenCalledWith(1);
-  
+
     process.argv = originalArgv;
     existsSyncMock.mockRestore();
     consoleErrorMock.mockRestore();
     processExitMock.mockRestore();
   });
-  
+
   test("run should exit with error if only one file path is provided", () => {
     const file = createTempFile(`key1=value1\nkey2=value2`, ".properties");
-    const consoleErrorMock = jest.spyOn(console, "error").mockImplementation(() => {});
-    const processExitMock = jest.spyOn(process, "exit").mockImplementation(() => {});
+    const consoleErrorMock = jest
+      .spyOn(console, "error")
+      .mockImplementation(() => {});
+    const processExitMock = jest
+      .spyOn(process, "exit")
+      .mockImplementation(() => {});
     const originalArgv = process.argv;
-  
+
     try {
       process.argv = ["node", "compareUtility.js", file];
       run();
     } catch {}
-  
+
     expect(consoleErrorMock).toHaveBeenCalledWith(
       "Please provide at least two file paths for comparison."
     );
     expect(processExitMock).toHaveBeenCalledWith(1);
-  
+
     process.argv = originalArgv;
     consoleErrorMock.mockRestore();
     processExitMock.mockRestore();
@@ -184,26 +206,311 @@ describe("compareUtility Tests", () => {
   test("run should handle valid file paths with mismatched keys", () => {
     const file1 = createTempFile(`key1=value1\nkey2=value2`, ".properties");
     const file2 = createTempFile(`key1=value1\nkey2=value3`, ".properties");
-    const consoleTableMock = jest.spyOn(console, "table").mockImplementation(() => {});
-    const consoleLogMock = jest.spyOn(console, "log").mockImplementation(() => {});
-    const processExitMock = jest.spyOn(process, "exit").mockImplementation(() => {});
+    const consoleTableMock = jest
+      .spyOn(console, "table")
+      .mockImplementation(() => {});
+    const consoleLogMock = jest
+      .spyOn(console, "log")
+      .mockImplementation(() => {});
+    const processExitMock = jest
+      .spyOn(process, "exit")
+      .mockImplementation(() => {});
     const originalArgv = process.argv;
-  
+
     try {
       process.argv = ["node", "compareUtility.js", file1, file2];
       run();
     } catch {}
-  
+
     expect(consoleTableMock).toHaveBeenCalled();
     expect(consoleLogMock).toHaveBeenCalledWith(
       expect.stringContaining("1 key(s) have mismatched values.")
     );
     expect(processExitMock).not.toHaveBeenCalled();
-  
+
     process.argv = originalArgv;
     consoleTableMock.mockRestore();
     consoleLogMock.mockRestore();
     processExitMock.mockRestore();
   });
-  
+
+  // New tests for report generation
+  describe("Report Generation Tests", () => {
+    test("generateHtmlReport should create valid HTML report", () => {
+      const file1 = createTempFile(`key1=value1\nkey2=value2`, ".properties");
+      const file2 = createTempFile(`key1=value1\nkey2=value3`, ".properties");
+      const filePaths = [file1, file2];
+      const comparisonData = compareFileData(filePaths);
+
+      const htmlReport = generateHtmlReport(filePaths, comparisonData);
+
+      // Check basic structure
+      expect(htmlReport).toContain("<!DOCTYPE html>");
+      expect(htmlReport).toContain('<html lang="en">');
+      expect(htmlReport).toContain(
+        "<title>Properties Comparison Report</title>"
+      );
+
+      // Check content
+      expect(htmlReport).toContain("key1");
+      expect(htmlReport).toContain("key2");
+      expect(htmlReport).toContain("value1");
+      expect(htmlReport).toContain("value2");
+      expect(htmlReport).toContain("value3");
+      expect(htmlReport).toContain("1 key(s) have mismatched values");
+    });
+
+    test("generateMarkdownReport should create valid Markdown report", () => {
+      const file1 = createTempFile(`key1=value1\nkey2=value2`, ".properties");
+      const file2 = createTempFile(`key1=value1\nkey2=value3`, ".properties");
+      const filePaths = [file1, file2];
+      const comparisonData = compareFileData(filePaths);
+
+      const mdReport = generateMarkdownReport(filePaths, comparisonData);
+
+      // Check structure
+      expect(mdReport).toContain("# Properties Comparison Report");
+      expect(mdReport).toContain("## Files Compared");
+      expect(mdReport).toContain("## Comparison Results");
+
+      // Check table format
+      expect(mdReport).toContain("| Key | Matched |");
+
+      // Check content
+      expect(mdReport).toContain("key1");
+      expect(mdReport).toContain("key2");
+      expect(mdReport).toContain("value1");
+      expect(mdReport).toContain("value2");
+      expect(mdReport).toContain("value3");
+      expect(mdReport).toContain("1 key(s) have mismatched values");
+    });
+  });
+
+  describe("compareFiles Tests", () => {
+    test("compareFiles should output to console by default", () => {
+      const file1 = createTempFile(`key1=value1\nkey2=value2`, ".properties");
+      const file2 = createTempFile(`key1=value1\nkey2=value3`, ".properties");
+
+      const consoleLogMock = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
+      const consoleTableMock = jest
+        .spyOn(console, "table")
+        .mockImplementation(() => {});
+
+      compareFiles([file1, file2]);
+
+      expect(consoleLogMock).toHaveBeenCalled();
+      expect(consoleTableMock).toHaveBeenCalled();
+
+      consoleLogMock.mockRestore();
+      consoleTableMock.mockRestore();
+    });
+
+    test("compareFiles should generate HTML report when format is html", () => {
+      const file1 = createTempFile(`key1=value1\nkey2=value2`, ".properties");
+      const file2 = createTempFile(`key1=value1\nkey2=value3`, ".properties");
+      const outputFile = createTempFile("", ".html");
+
+      const consoleLogMock = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
+
+      compareFiles([file1, file2], { format: "html", outputFile });
+
+      // Verify file was written
+      const fileContents = fs.readFileSync(outputFile, "utf8");
+      expect(fileContents).toContain("<!DOCTYPE html>");
+      expect(fileContents).toContain(
+        "<title>Properties Comparison Report</title>"
+      );
+
+      expect(consoleLogMock).toHaveBeenCalledWith(
+        `HTML report saved to: ${outputFile}`
+      );
+
+      consoleLogMock.mockRestore();
+    });
+
+    test("compareFiles should output HTML to console when no outputFile is provided", () => {
+      const file1 = createTempFile(`key1=value1\nkey2=value2`, ".properties");
+      const file2 = createTempFile(`key1=value1\nkey2=value3`, ".properties");
+
+      const consoleLogMock = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
+
+      compareFiles([file1, file2], { format: "html" });
+
+      // Should log the HTML to console
+      const calls = consoleLogMock.mock.calls.flat();
+      const htmlOutput = calls.find(
+        (arg) => typeof arg === "string" && arg.includes("<!DOCTYPE html>")
+      );
+      expect(htmlOutput).toBeDefined();
+
+      consoleLogMock.mockRestore();
+    });
+
+    test("compareFiles should generate Markdown report when format is markdown", () => {
+      const file1 = createTempFile(`key1=value1\nkey2=value2`, ".properties");
+      const file2 = createTempFile(`key1=value1\nkey2=value3`, ".properties");
+      const outputFile = createTempFile("", ".md");
+
+      const consoleLogMock = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
+
+      compareFiles([file1, file2], { format: "markdown", outputFile });
+
+      // Verify file was written
+      const fileContents = fs.readFileSync(outputFile, "utf8");
+      expect(fileContents).toContain("# Properties Comparison Report");
+
+      expect(consoleLogMock).toHaveBeenCalledWith(
+        `Markdown report saved to: ${outputFile}`
+      );
+
+      consoleLogMock.mockRestore();
+    });
+
+    test("compareFiles should output Markdown to console when no outputFile is provided", () => {
+      const file1 = createTempFile(`key1=value1\nkey2=value2`, ".properties");
+      const file2 = createTempFile(`key1=value1\nkey2=value3`, ".properties");
+
+      const consoleLogMock = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
+
+      compareFiles([file1, file2], { format: "markdown" });
+
+      // Should log the Markdown to console
+      const calls = consoleLogMock.mock.calls.flat();
+      const mdOutput = calls.find(
+        (arg) =>
+          typeof arg === "string" &&
+          arg.includes("# Properties Comparison Report")
+      );
+      expect(mdOutput).toBeDefined();
+
+      consoleLogMock.mockRestore();
+    });
+
+    test("compareFiles should fallback to console output for invalid format", () => {
+      const file1 = createTempFile(`key1=value1\nkey2=value2`, ".properties");
+      const file2 = createTempFile(`key1=value1\nkey2=value3`, ".properties");
+
+      const consoleLogMock = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
+      const consoleTableMock = jest
+        .spyOn(console, "table")
+        .mockImplementation(() => {});
+      const consoleErrorMock = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+
+      compareFiles([file1, file2], { format: "invalid" });
+
+      expect(consoleErrorMock).toHaveBeenCalledWith(
+        expect.stringContaining("Unsupported format: invalid")
+      );
+      expect(consoleLogMock).toHaveBeenCalled();
+      expect(consoleTableMock).toHaveBeenCalled();
+
+      consoleLogMock.mockRestore();
+      consoleTableMock.mockRestore();
+      consoleErrorMock.mockRestore();
+    });
+  });
+
+  describe("Complete Workflow Tests", () => {
+    test("run should parse command line arguments with format and output options", () => {
+      const file1 = createTempFile(`key1=value1\nkey2=value2`, ".properties");
+      const file2 = createTempFile(`key1=value1\nkey2=value3`, ".properties");
+      const outputFile = createTempFile("", ".html");
+
+      const consoleLogMock = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
+      const originalArgv = process.argv;
+
+      try {
+        process.argv = [
+          "node",
+          "compareUtility.js",
+          "--format",
+          "html",
+          "--output",
+          outputFile,
+          file1,
+          file2,
+        ];
+        run();
+      } catch {}
+
+      // Verify output file was written
+      const fileContents = fs.readFileSync(outputFile, "utf8");
+      expect(fileContents).toContain("<!DOCTYPE html>");
+
+      process.argv = originalArgv;
+      consoleLogMock.mockRestore();
+    });
+
+    test("run should handle short option format (-f, -o)", () => {
+      const file1 = createTempFile(`key1=value1\nkey2=value2`, ".properties");
+      const file2 = createTempFile(`key1=value1\nkey2=value3`, ".properties");
+      const outputFile = createTempFile("", ".md");
+
+      const consoleLogMock = jest
+        .spyOn(console, "log")
+        .mockImplementation(() => {});
+      const originalArgv = process.argv;
+
+      try {
+        process.argv = [
+          "node",
+          "compareUtility.js",
+          "-f",
+          "markdown",
+          "-o",
+          outputFile,
+          file1,
+          file2,
+        ];
+        run();
+      } catch {}
+
+      // Verify output file was written
+      const fileContents = fs.readFileSync(outputFile, "utf8");
+      expect(fileContents).toContain("# Properties Comparison Report");
+
+      process.argv = originalArgv;
+      consoleLogMock.mockRestore();
+    });
+
+    test("run should show usage when no arguments are provided", () => {
+      const consoleErrorMock = jest
+        .spyOn(console, "error")
+        .mockImplementation(() => {});
+      const processExitMock = jest
+        .spyOn(process, "exit")
+        .mockImplementation(() => {});
+      const originalArgv = process.argv;
+
+      try {
+        process.argv = ["node", "compareUtility.js"];
+        run();
+      } catch {}
+
+      expect(consoleErrorMock).toHaveBeenCalledWith(
+        "Please provide file paths as command-line arguments."
+      );
+      expect(processExitMock).toHaveBeenCalledWith(1);
+
+      process.argv = originalArgv;
+      consoleErrorMock.mockRestore();
+      processExitMock.mockRestore();
+    });
+  });
 });

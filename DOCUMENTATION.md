@@ -2,13 +2,18 @@
 
 ## Overview
 
-This utility parses and compares **.properties** and **.yml or .yaml (YAML)** files. It reads each file as key-value pairs, compares the values for each key across multiple files, and logs the results.
+This utility parses and compares **.properties** and **.yml or .yaml (YAML)** files. It reads each file as key-value pairs, compares the values for each key across multiple files, and produces detailed comparison reports.
 
 ### Features:
 - Parse **.properties** files into key-value objects.
 - Parse **.yml or .yaml** (YAML) files into flattened key-value objects (supports nested keys).
 - Compare key values across multiple files (both **.properties** and **.yml or .yaml**).
-- Log detailed comparison results, including mismatches.
+- Generate reports in multiple formats:
+  - Console output with color-coded highlighting
+  - HTML reports with CSS styling
+  - Markdown reports
+- Save reports to files or display in console
+- Flexible command-line interface with options
 
 ---
 
@@ -26,7 +31,26 @@ This utility parses and compares **.properties** and **.yml or .yaml (YAML)** fi
 Run the script using Node.js with file paths provided as command-line arguments:
 
 ```bash
-node script.js <filePath1> <filePath2> [<filePath3> ...]
+node compareUtility.js [options] <filePath1> <filePath2> [<filePath3> ...]
+```
+
+### Command-Line Options
+```
+Options:
+  --format, -f <format>   Output format: console, html, or markdown
+  --output, -o <file>     Output file for html or markdown reports
+```
+
+### Examples
+```bash
+# Basic comparison with console output
+node compareUtility.js file1.properties file2.yaml
+
+# Generate HTML report and save to output.html
+node compareUtility.js --format html --output output.html file1.properties file2.yaml
+
+# Short form options
+node compareUtility.js -f markdown -o report.md file1.properties file2.properties file3.yml
 ```
 
 ### Input Format
@@ -35,6 +59,13 @@ The properties files should follow the format:
 key1=value1
 key2=value2
 # Comments are ignored
+```
+
+YAML files should follow standard YAML format. Nested structures will be flattened with dot notation:
+```yaml
+key1: value1
+key2:
+  nestedKey: nestedValue  # Will be accessible as "key2.nestedKey"
 ```
 
 ---
@@ -60,113 +91,213 @@ console.log(properties);
 
 ---
 
-### `compareProperties(filePaths)`
+### `parseYamlFile(filePath)`
 
-Compares properties across multiple properties files and logs the results.
+Parses a .yml or .yaml file into a flat key-value map using dot notation for nested keys.
 
 #### Parameters:
-- `filePaths` (string[]): Array of file paths to be compared.
+- `filePath` (string): Path to the YAML file.
 
 #### Returns:
-- None. Outputs comparison results to the console.
+- (Object): A flattened object containing key-value pairs from the YAML file.
 
 #### Example:
-```bash
-node script.js file1.properties file2.yaml file3.yml
-```
-
-#### Output Example:
-```text
-Comparing properties across files:
-
-Key: key1 - Values match across all files.
-Key: key2 - Mismatched values:
-  File 1: value1
-  File 2: value2
-  File 3: value3
+```javascript
+const data = parseYamlFile('/path/to/yaml/file');
+console.log(data);
+// Output: { 'key1': 'value1', 'key2.nestedKey': 'nestedValue' }
 ```
 
 ---
 
-### Runtime Input Handling
+### `parseFile(filePath)`
 
-The script expects file paths as command-line arguments:
-- Extracted from `process.argv`.
-- If no file paths are provided, it displays an error and exits:
-  ```
-  Please provide the paths to the properties files as command-line arguments.
-  ```
-- Verifies the existence of all specified files. If any file is missing:
-  ```
-  One or more properties files are missing. Ensure all specified properties files exist.
-  ```
+Detects file extension and parses the file content into an object.
+
+#### Parameters:
+- `filePath` (string): Path to the file (.properties, .yml, or .yaml).
+
+#### Returns:
+- (Object): Parsed content as a key-value map, or {} if unsupported.
 
 ---
 
-### Additional Functions
+### `compareFileData(filePaths)`
 
-#### `parseFile(filePath)`
-Detects file extension and parses `.properties`, `.yaml`, or `.yml` files. Returns an object with flattened key-value pairs or `{}` if unsupported.
+Internal helper that compares key-value data from multiple files and returns structured results.
 
-#### `parseYamlFile(filePath)`
-Parses a `.yml` or `.yaml` file into a flat key-value map. Returns an object with dot-notation keys for nested values.
+#### Parameters:
+- `filePaths` (string[]): Array of file paths.
 
-#### `compareFileData(filePaths)`
-Internally compares parsed data from multiple files. Returns an object with `mismatchCount` and detailed info for each key.
+#### Returns:
+- (Object): An object containing mismatch count and detailed comparison information.
 
-#### `checkIfAllValuesMatch(filePaths)`
-Checks if all keys match across all provided files. Returns a boolean.
+---
 
-#### `getMismatchFields(filePaths)`
-Returns an array of keys whose values differ across files.
+### `checkIfAllValuesMatch(filePaths)`
 
-#### `compareFiles(filePaths)`
-Logs detailed comparison of key-value pairs across files. Prints a summary indicating mismatched keys.
+Checks if all values match across the provided files.
 
-#### `run()`
-CLI entry point. Reads file paths, checks existence, and calls `compareFiles`.
+#### Parameters:
+- `filePaths` (string[]): Array of file paths.
+
+#### Returns:
+- (boolean): True if all properties match across all files, false otherwise.
+
+---
+
+### `getMismatchFields(filePaths)`
+
+Returns a list of fields (keys) that do not match across the provided files.
+
+#### Parameters:
+- `filePaths` (string[]): Array of file paths.
+
+#### Returns:
+- (string[]): List of mismatched keys.
+
+---
+
+### `generateHtmlReport(filePaths, comparisonData)`
+
+Generates an HTML report for the comparison results.
+
+#### Parameters:
+- `filePaths` (string[]): Array of file paths that were compared.
+- `comparisonData` (Object): The output from compareFileData function.
+
+#### Returns:
+- (string): HTML document as string.
+
+---
+
+### `generateMarkdownReport(filePaths, comparisonData)`
+
+Generates a Markdown report for the comparison results.
+
+#### Parameters:
+- `filePaths` (string[]): Array of file paths that were compared.
+- `comparisonData` (Object): The output from compareFileData function.
+
+#### Returns:
+- (string): Markdown document as string.
+
+---
+
+### `compareFiles(filePaths, options)`
+
+Compares properties/keys across multiple files and generates a report based on options.
+
+#### Parameters:
+- `filePaths` (string[]): Array of file paths.
+- `options` (Object): Options for comparison output.
+  - `format` (string): Output format ('console', 'html', or 'markdown').
+  - `outputFile` (string): Path to save the report (for html and markdown).
+
+#### Example:
+```javascript
+// Compare with console output
+compareFiles(['file1.properties', 'file2.yaml']);
+
+// Generate HTML report
+compareFiles(['file1.properties', 'file2.yaml'], { 
+  format: 'html', 
+  outputFile: 'report.html' 
+});
+```
+
+---
+
+### `run()`
+
+CLI entry point. Parses command-line arguments and runs the comparison.
+
+---
+
+## Output Formats
+
+### Console Output
+The default output format provides:
+- A table showing all keys and their values across files
+- Highlighted mismatched rows for easy identification
+- A summary of mismatched keys
+
+### HTML Report
+Generates a visually appealing HTML report with:
+- CSS styling
+- Color-coded cells for matches and mismatches
+- Summary section with quick statistics
+- Responsive design
+
+### Markdown Report
+Creates a Markdown document with:
+- File list with paths
+- Comparison table
+- Summary section with mismatched keys highlighted
 
 ---
 
 ## Error Handling
 
 - **No File Paths Provided**: Logs an error and exits.
+- **Only One File Provided**: Logs an error about needing at least two files and exits.
 - **Missing Files**: Logs missing files and exits.
-- **Empty or Malformed Properties Files**: Skips invalid lines.
+- **Unsupported File Extensions**: Logs a warning and treats as empty file.
+- **Invalid YAML**: Logs error details and treats as empty file.
+- **Invalid Format Option**: Falls back to console output with warning.
 
 ---
 
-## Example Properties Files
+## Example Scenarios
 
-### File 1 (`file1.properties`):
-```
-key1=value1
-key2=value2
-```
+### Basic Comparison
 
-### File 2 (`file2.properties`):
-```
-key1=value1
-key2=value3
-```
-
----
-
-## Sample Execution
-
-### Command:
+#### Command:
 ```bash
-node script.js file1.properties file2.properties
+node compareUtility.js file1.properties file2.properties
 ```
 
-### Output:
-```text
-Comparing properties across files:
+#### Output:
+```
+Comparing properties/keys across files:
 
-Key: key1 - Values match across all files.
-Key: key2 - Mismatched values:
-  File 1: value2
-  File 2: value3
+┌─────────┬─────┬────────────┬────────────┐
+│ (index) │ Key │ Matched    │ ...        │
+├─────────┼─────┼────────────┼────────────┤
+│ 0       │ ... │ 'Yes'      │ ...        │
+│ 1       │ ... │ 'No'       │ ...        │
+└─────────┴─────┴────────────┴────────────┘
+
+=== Highlighted Mismatched Rows ===
+Key: key2 | File 1: value2 | File 2: value3
+
+=== Summary ===
+1 key(s) have mismatched values.
+Mismatched keys: key2
+```
+
+### HTML Report Generation
+
+#### Command:
+```bash
+node compareUtility.js -f html -o report.html file1.properties file2.yaml
+```
+
+#### Output:
+```
+HTML report saved to: report.html
+```
+
+### Markdown Report Generation
+
+#### Command:
+```bash
+node compareUtility.js -f markdown -o report.md file1.properties file2.properties
+```
+
+#### Output:
+```
+Markdown report saved to: report.md
 ```
 
 ---
@@ -174,21 +305,23 @@ Key: key2 - Mismatched values:
 ## Dependencies
 
 - `fs` module (Node.js File System)
-- `js-yaml` module (Node.js YAML library)
+- `path` module (Node.js Path)
+- `js-yaml` module (YAML parsing)
+- `chalk` module (Terminal styling)
 
 ---
 
 ## Limitations
 
-- Assumes properties are simple key-value pairs separated by `=`.
-- Ignores keys without a corresponding value.
-- Does not support multi-line properties.
+- Assumes properties are simple key-value pairs separated by `=`
+- Does not support multi-line properties in .properties files
+- Flattens all nested YAML structures to dot notation
 
 ---
 
 ## License
 
-This script is licensed under the MIT License.
+This utility is licensed under the MIT License.
 
 ---
 

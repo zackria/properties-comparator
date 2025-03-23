@@ -27,3 +27,6 @@ or
 
 `node index.js ./test/config3.txt ./test/config3.yml2`
 
+`node index.js --format html --output report.html  ./test/config1.properties ./test/config2.yml`
+
+`node index.js -f markdown -o report.md ./test/config1.properties ./test/config2.yml`
