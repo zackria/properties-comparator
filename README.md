@@ -1,8 +1,18 @@
 # properties-comparator
-This utility provides functionality to parse and compare **.properties** and **.yml or .yaml(YAML)** files in the format of key-value pairs. It reads these files, compares the values for each key across multiple files, and logs the results.
-
+This utility parses and compares **.properties** and **.yml or .yaml (YAML)** files. It reads each file as key-value pairs, compares the values for each key across multiple files, and produces detailed comparison reports.
 
 Utility is available as NPM Package [https://www.npmjs.com/package/properties-comparator](https://www.npmjs.com/package/properties-comparator)
+
+### Features:
+- Parse **.properties** files into key-value objects.
+- Parse **.yml or .yaml** (YAML) files into flattened key-value objects (supports nested keys).
+- Compare key values across multiple files (both **.properties** and **.yml or .yaml**).
+- Generate reports in multiple formats:
+  - Console output with color-coded highlighting
+  - HTML reports with CSS styling
+  - Markdown reports
+- Save reports to files or display in console
+- Flexible command-line interface with options
 
 
 ###  Install the Package
@@ -37,7 +47,7 @@ Utility is available as NPM Package [https://www.npmjs.com/package/properties-co
 
 ## Markdown View
 
-![alt text](./screenshots/HtmlReport.png)
+![alt text](./screenshots/MarkDownReport.png)
 
 ## Well Tested with 90+% code coverage
 
