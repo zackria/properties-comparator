@@ -2,7 +2,7 @@
 
 A powerful utility for parsing and comparing **.properties** and **.yml/.yaml** files. This tool reads files as key-value pairs, compares values across multiple files, and generates detailed comparison reports in various formats.
 
-[![NPM Package](https://img.shields.io/npm/v/properties-comparator.svg)](https://www.npmjs.com/package/properties-comparator)
+[![NPM Package](https://img.shields.io/npm/v/properties-comparator.svg)](https://www.npmjs.com/package/properties-comparator)  [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=zackria_properties-comparator&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=zackria_properties-comparator) 
 
 ## Features
 
