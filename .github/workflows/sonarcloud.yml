@@ -43,24 +43,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Analyze with SonarCloud
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
 
-        # You can pin the exact commit or the version.
-        # uses: SonarSource/sonarcloud-github-action@v2.2.0
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests with coverage
+        run: npm test -- --coverage
+
+      - name: Analyze with SonarCloud
         uses: SonarSource/sonarcloud-github-action@4006f663ecaf1f8093e8e4abb9227f6041f52216
         env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Generate a token on Sonarcloud.io, add it to the secrets of this repo with the name SONAR_TOKEN (Settings > Secrets > Actions > add new repository secret)
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          # Additional arguments for the SonarScanner CLI
-          args:
-            # Unique keys of your project and organization. You can find them in SonarCloud > Information (bottom-left menu)
-            # mandatory
-            -Dsonar.projectKey=zackria_properties-comparator
+          args: -Dsonar.projectKey=zackria_properties-comparator
             -Dsonar.organization=zackria
             -Dsonar.sources=index.js,cli.js,src
             -Dsonar.tests=test
             -Dsonar.test.inclusions=test/**/*.test.js
-            -Dsonar.exclusions=node_modules/**, coverage/**
+            -Dsonar.exclusions=node_modules/**,coverage/**
             -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-          # When you need the analysis to take place in a directory other than the one from which it was launched, default is .
           projectBaseDir: .
