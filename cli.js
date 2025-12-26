@@ -2,8 +2,8 @@
 
 import { program } from 'commander';
 import { compareFiles } from './index.js';
-import { readFileSync } from 'fs';
-import path from 'path';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 
 // Get version from package.json
 let version = '1.0.0';
@@ -13,6 +13,7 @@ try {
   version = packageJson.version;
 } catch (err) {
   // Use default version if package.json can't be read
+  console.warn('Warning: Could not read version from package.json, using default 1.0.0');
 }
 
 // Check if no arguments were provided
@@ -40,7 +41,7 @@ program
     try {
       // Resolve all file paths
       const resolvedPaths = files.map(file => path.resolve(file));
-      
+
       // Prepare options for compareFiles
       const comparisonOptions = {
         format: options.format || 'console',
@@ -50,7 +51,7 @@ program
 
       // Run the comparison
       compareFiles(resolvedPaths, comparisonOptions);
-      
+
     } catch (error) {
       console.error('Error:', error.message);
       process.exit(1);
