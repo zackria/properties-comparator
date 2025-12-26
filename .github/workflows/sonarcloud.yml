@@ -57,11 +57,10 @@ jobs:
             # mandatory
             -Dsonar.projectKey=zackria_properties-comparator
             -Dsonar.organization=zackria
-            # Comma-separated paths to directories containing main source files.
-            #-Dsonar.sources= # optional, default is project base directory
-            # Comma-separated paths to directories containing test source files.
-            #-Dsonar.tests= # optional. For more info about Code Coverage, please refer to https://docs.sonarcloud.io/enriching/test-coverage/overview/
-            # Adds more detail to both client and server-side analysis logs, activating DEBUG mode for the scanner, and adding client-side environment variables and system properties to the server-side log of analysis report processing.
-            #-Dsonar.verbose= # optional, default is false
+            -Dsonar.sources=index.js,cli.js,src
+            -Dsonar.tests=test
+            -Dsonar.test.inclusions=test/**/*.test.js
+            -Dsonar.exclusions=node_modules/**, coverage/**
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
           # When you need the analysis to take place in a directory other than the one from which it was launched, default is .
           projectBaseDir: .
