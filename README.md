@@ -79,8 +79,8 @@ This package is thoroughly tested with over 90% code coverage to ensure reliabil
 ## Compatibility
 
 Developed and tested with:
-- npm v11.1.0
-- Node.js v22.13.0
+- npm v11.7.0
+- Node.js v25.2.1
 
 ## Documentation
 
