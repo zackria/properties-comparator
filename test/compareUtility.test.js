@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 import {
   parsePropertiesFile,
   parseYamlFile,
@@ -22,7 +23,7 @@ let tempFiles = [];
  * We'll push the generated paths into `tempFiles` for cleanup.
  */
 function createTempFile(content, ext = ".properties") {
-  const unique = `${Date.now()}_${Math.random()}`;
+  const unique = crypto.randomUUID();
   const fileName = `test_${unique}${ext}`;
   const filePath = path.join(__dirname, fileName);
   fs.writeFileSync(filePath, content, "utf8");
