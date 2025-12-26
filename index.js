@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 import chalk from "chalk";
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 import yaml from "js-yaml";
 
 /**
@@ -115,7 +115,7 @@ function parseFile(filePath) {
     default:
       console.error(
         `Warning: Unsupported file extension "${ext}" for file "${filePath}". ` +
-          `Only .properties, .yml, or .yaml are supported. This file will be treated as empty.`
+        `Only .properties, .yml, or .yaml are supported. This file will be treated as empty.`
       );
       return {};
   }
@@ -147,7 +147,7 @@ function compareFileData(filePaths) {
   // Compare values for each key across files
   allKeys.forEach((key) => {
     const values = parsedObjects.map(
-      (obj) => obj[key]?.replace(/\s+/g, "") || "N/A"
+      (obj) => obj[key]?.replaceAll(/\s+/g, "") || "N/A"
     );
     const matched = values.every((value) => value === values[0]);
     mismatchDetails.push({ key, values, matched });
@@ -224,10 +224,10 @@ function generateHtmlReport(filePaths, comparisonData) {
     <h2>Files Compared:</h2>
     <ol>
       ${fileNames
-        .map(
-          (name, idx) => `<li>${name} <small>(${filePaths[idx]})</small></li>`
-        )
-        .join("\n      ")}
+      .map(
+        (name, idx) => `<li>${name} <small>(${filePaths[idx]})</small></li>`
+      )
+      .join("\n      ")}
     </ol>
   </div>
 
@@ -237,8 +237,8 @@ function generateHtmlReport(filePaths, comparisonData) {
       <th>Key</th>
       <th>Matched</th>
       ${fileNames
-        .map((name, idx) => `<th>File ${idx + 1}: ${name}</th>`)
-        .join("\n      ")}
+      .map((name, idx) => `<th>File ${idx + 1}: ${name}</th>`)
+      .join("\n      ")}
     </tr>`;
 
   // Add table rows for each key
@@ -250,9 +250,8 @@ function generateHtmlReport(filePaths, comparisonData) {
     // Add values from each file
     values.forEach((value, idx) => {
       const cellClass = matched ? "" : "value-mismatch";
-      html += `\n      <td class="${cellClass}">${
-        value === "N/A" ? "<em>N/A</em>" : value
-      }</td>`;
+      html += `\n      <td class="${cellClass}">${value === "N/A" ? "<em>N/A</em>" : value
+        }</td>`;
     });
 
     html += `\n    </tr>`;
@@ -268,9 +267,9 @@ function generateHtmlReport(filePaths, comparisonData) {
   } else {
     html += `\n    <p>${mismatchCount} key(s) have mismatched values.</p>
     <p><strong>Mismatched keys:</strong> ${mismatchDetails
-      .filter((detail) => !detail.matched)
-      .map((detail) => detail.key)
-      .join(", ")}</p>`;
+        .filter((detail) => !detail.matched)
+        .map((detail) => detail.key)
+        .join(", ")}</p>`;
   }
 
   html += `\n  </div>
@@ -430,20 +429,26 @@ function run() {
 
   // Parse arguments for format and output file
   const filePaths = [];
-  for (let i = 0; i < args.length; i++) {
+  let i = 0;
+  while (i < args.length) {
     if (args[i] === "--format" || args[i] === "-f") {
       if (i + 1 < args.length) {
         options.format = args[i + 1].toLowerCase();
-        i++; // Skip the next argument as it's the format value
+        i += 2; // Move past flag and its value
+      } else {
+        i++;
       }
     } else if (args[i] === "--output" || args[i] === "-o") {
       if (i + 1 < args.length) {
         options.outputFile = args[i + 1];
-        i++; // Skip the next argument as it's the output file path
+        i += 2; // Move past flag and its value
+      } else {
+        i++;
       }
     } else {
       // Not an option, treat as file path
       filePaths.push(path.resolve(args[i]));
+      i++;
     }
   }
 
@@ -481,27 +486,27 @@ function run() {
  * @param {Object} options - Comparison options
  * @returns {Object} Comparison results in a structured format
  */
-async function compareProperties(file1, file2, options = {}) {
+function compareProperties(file1, file2, options = {}) {
   const filePaths = [file1, file2];
   const comparisonData = compareFileData(filePaths);
-  
+
   // Process the output based on options
   if (options.output) {
     if (options.json) {
       fs.writeFileSync(options.output, JSON.stringify(comparisonData, null, 2));
     } else {
       const format = path.extname(options.output).toLowerCase() === '.md' ? 'markdown' : 'html';
-      const report = format === 'markdown' 
-        ? generateMarkdownReport(filePaths, comparisonData) 
+      const report = format === 'markdown'
+        ? generateMarkdownReport(filePaths, comparisonData)
         : generateHtmlReport(filePaths, comparisonData);
       fs.writeFileSync(options.output, report);
     }
-    
+
     if (options.verbose) {
       console.log(`Comparison report saved to ${options.output}`);
     }
   }
-  
+
   return comparisonData;
 }
 

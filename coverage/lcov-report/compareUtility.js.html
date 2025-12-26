@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">98.89% </span>
+                <span class="strong">97.82% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>179/181</span>
+                <span class='fraction'>180/184</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">98.84% </span>
+                <span class="strong">97.74% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>171/173</span>
+                <span class='fraction'>173/177</span>
             </div>
         
             
@@ -583,7 +583,12 @@
 <a name='L518'></a><a href='#L518'>518</a>
 <a name='L519'></a><a href='#L519'>519</a>
 <a name='L520'></a><a href='#L520'>520</a>
-<a name='L521'></a><a href='#L521'>521</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
+<a name='L521'></a><a href='#L521'>521</a>
+<a name='L522'></a><a href='#L522'>522</a>
+<a name='L523'></a><a href='#L523'>523</a>
+<a name='L524'></a><a href='#L524'>524</a>
+<a name='L525'></a><a href='#L525'>525</a>
+<a name='L526'></a><a href='#L526'>526</a></td><td class="line-coverage quiet"><span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -839,7 +844,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1016,18 +1020,24 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-yes">13x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-yes">9x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1106,8 +1116,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">#!/usr/bin/env node
 &nbsp;
 import chalk from "chalk";
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 import yaml from "js-yaml";
 &nbsp;
 /**
@@ -1220,7 +1230,7 @@ function parseFile(filePath) {
     default:
       console.error(
         `Warning: Unsupported file extension "${ext}" for file "${filePath}". ` +
-          `Only .properties, .yml, or .yaml are supported. This file will be treated as empty.`
+        `Only .properties, .yml, or .yaml are supported. This file will be treated as empty.`
       );
       return {};
   }
@@ -1252,7 +1262,7 @@ function compareFileData(filePaths) {
   // Compare values for each key across files
   allKeys.forEach((key) =&gt; {
     const values = parsedObjects.map(
-      (obj) =&gt; obj[key]?.replace(/\s+/g, "") || <span class="branch-1 cbranch-no" title="branch not covered" >"N/A"</span>
+      (obj) =&gt; obj[key]?.replaceAll(/\s+/g, "") || <span class="branch-1 cbranch-no" title="branch not covered" >"N/A"</span>
     );
     const matched = values.every((value) =&gt; value === values[0]);
     mismatchDetails.push({ key, values, matched });
@@ -1329,10 +1339,10 @@ function generateHtmlReport(filePaths, comparisonData) {
     &lt;h2&gt;Files Compared:&lt;/h2&gt;
     &lt;ol&gt;
       ${fileNames
-        .map(
-          (name, idx) =&gt; `&lt;li&gt;${name} &lt;small&gt;(${filePaths[idx]})&lt;/small&gt;&lt;/li&gt;`
-        )
-        .join("\n      ")}
+      .map(
+        (name, idx) =&gt; `&lt;li&gt;${name} &lt;small&gt;(${filePaths[idx]})&lt;/small&gt;&lt;/li&gt;`
+      )
+      .join("\n      ")}
     &lt;/ol&gt;
   &lt;/div&gt;
 &nbsp;
@@ -1342,8 +1352,8 @@ function generateHtmlReport(filePaths, comparisonData) {
       &lt;th&gt;Key&lt;/th&gt;
       &lt;th&gt;Matched&lt;/th&gt;
       ${fileNames
-        .map((name, idx) =&gt; `&lt;th&gt;File ${idx + 1}: ${name}&lt;/th&gt;`)
-        .join("\n      ")}
+      .map((name, idx) =&gt; `&lt;th&gt;File ${idx + 1}: ${name}&lt;/th&gt;`)
+      .join("\n      ")}
     &lt;/tr&gt;`;
 &nbsp;
   // Add table rows for each key
@@ -1355,9 +1365,8 @@ function generateHtmlReport(filePaths, comparisonData) {
     // Add values from each file
     values.forEach((value, idx) =&gt; {
       const cellClass = matched ? "" : "value-mismatch";
-      html += `\n      &lt;td class="${cellClass}"&gt;${
-        value === "N/A" ? <span class="branch-0 cbranch-no" title="branch not covered" >"&lt;em&gt;N/A&lt;/em&gt;" </span>: value
-      }&lt;/td&gt;`;
+      html += `\n      &lt;td class="${cellClass}"&gt;${value === "N/A" ? <span class="branch-0 cbranch-no" title="branch not covered" >"&lt;em&gt;N/A&lt;/em&gt;" </span>: value
+        }&lt;/td&gt;`;
     });
 &nbsp;
     html += `\n    &lt;/tr&gt;`;
@@ -1373,9 +1382,9 @@ function generateHtmlReport(filePaths, comparisonData) {
   } else {
     html += `\n    &lt;p&gt;${mismatchCount} key(s) have mismatched values.&lt;/p&gt;
     &lt;p&gt;&lt;strong&gt;Mismatched keys:&lt;/strong&gt; ${mismatchDetails
-      .filter((detail) =&gt; !detail.matched)
-      .map((detail) =&gt; detail.key)
-      .join(", ")}&lt;/p&gt;`;
+        .filter((detail) =&gt; !detail.matched)
+        .map((detail) =&gt; detail.key)
+        .join(", ")}&lt;/p&gt;`;
   }
 &nbsp;
   html += `\n  &lt;/div&gt;
@@ -1535,20 +1544,26 @@ function run() {
 &nbsp;
   // Parse arguments for format and output file
   const filePaths = [];
-  for (let i = 0; i &lt; args.length; i++) {
+  let i = 0;
+  while (i &lt; args.length) {
     if (args[i] === "--format" || args[i] === "-f") {
-      <span class="missing-if-branch" title="else path not taken" >E</span>if (i + 1 &lt; args.length) {
+      if (i + 1 &lt; args.length) {
         options.format = args[i + 1].toLowerCase();
-        i++; // Skip the next argument as it's the format value
+        i += 2; // Move past flag and its value
+      } else <span class="missing-if-branch" title="else path not taken" >E</span>{
+<span class="cstat-no" title="statement not covered" >        i++;</span>
       }
     } else if (args[i] === "--output" || args[i] === "-o") {
-      <span class="missing-if-branch" title="else path not taken" >E</span>if (i + 1 &lt; args.length) {
+      if (i + 1 &lt; args.length) {
         options.outputFile = args[i + 1];
-        i++; // Skip the next argument as it's the output file path
+        i += 2; // Move past flag and its value
+      } else <span class="missing-if-branch" title="else path not taken" >E</span>{
+<span class="cstat-no" title="statement not covered" >        i++;</span>
       }
     } else {
       // Not an option, treat as file path
       filePaths.push(path.resolve(args[i]));
+      i++;
     }
   }
 &nbsp;
@@ -1586,27 +1601,27 @@ function run() {
  * @param {Object} options - Comparison options
  * @returns {Object} Comparison results in a structured format
  */
-async function compareProperties(file1, file2, options = {}) {
+function compareProperties(file1, file2, options = {}) {
   const filePaths = [file1, file2];
   const comparisonData = compareFileData(filePaths);
-  
+&nbsp;
   // Process the output based on options
   if (options.output) {
     if (options.json) {
       fs.writeFileSync(options.output, JSON.stringify(comparisonData, null, 2));
     } else {
       const format = path.extname(options.output).toLowerCase() === '.md' ? 'markdown' : 'html';
-      const report = format === 'markdown' 
-        ? generateMarkdownReport(filePaths, comparisonData) 
+      const report = format === 'markdown'
+        ? generateMarkdownReport(filePaths, comparisonData)
         : generateHtmlReport(filePaths, comparisonData);
       fs.writeFileSync(options.output, report);
     }
-    
+&nbsp;
     if (options.verbose) {
       console.log(`Comparison report saved to ${options.output}`);
     }
   }
-  
+&nbsp;
   return comparisonData;
 }
 &nbsp;
@@ -1630,7 +1645,7 @@ export {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-12-26T15:51:30.363Z
+                at 2025-12-26T16:16:17.365Z
             </div>
         <script src="prettify.js"></script>
         <script>
