@@ -418,52 +418,67 @@ function compareFiles(filePaths, options = {}) {
 }
 
 /**
- * CLI entry point for comparing .properties and .yml/.yaml files.
+ * Prints the usage information for the CLI.
  */
-function run() {
-  const args = process.argv.slice(2);
+function printUsage() {
+  console.error("Please provide file paths as command-line arguments.");
+  console.error(
+    "Usage: properties-comparator [options] file1 file2 [file3...]"
+  );
+  console.error("Options:");
+  console.error(
+    "  --format, -f <format>   Output format: console, html, or markdown"
+  );
+  console.error(
+    "  --output, -o <file>     Output file for html or markdown reports"
+  );
+}
+
+/**
+ * Parses command-line arguments.
+ * @param {string[]} args - Array of command-line arguments.
+ * @returns {{ filePaths: string[], options: Object }} - Parsed paths and options.
+ */
+function parseArgs(args) {
   const options = {
     format: "console",
     outputFile: null,
   };
-
-  // Parse arguments for format and output file
   const filePaths = [];
+
   let i = 0;
   while (i < args.length) {
     if (args[i] === "--format" || args[i] === "-f") {
       if (i + 1 < args.length) {
         options.format = args[i + 1].toLowerCase();
-        i += 2; // Move past flag and its value
+        i += 2;
       } else {
         i++;
       }
     } else if (args[i] === "--output" || args[i] === "-o") {
       if (i + 1 < args.length) {
         options.outputFile = args[i + 1];
-        i += 2; // Move past flag and its value
+        i += 2;
       } else {
         i++;
       }
     } else {
-      // Not an option, treat as file path
       filePaths.push(path.resolve(args[i]));
       i++;
     }
   }
 
+  return { filePaths, options };
+}
+
+/**
+ * CLI entry point for comparing .properties and .yml/.yaml files.
+ */
+function run() {
+  const { filePaths, options } = parseArgs(process.argv.slice(2));
+
   if (filePaths.length === 0) {
-    console.error("Please provide file paths as command-line arguments.");
-    console.error(
-      "Usage: properties-comparator [options] file1 file2 [file3...]"
-    );
-    console.error("Options:");
-    console.error(
-      "  --format, -f <format>   Output format: console, html, or markdown"
-    );
-    console.error(
-      "  --output, -o <file>     Output file for html or markdown reports"
-    );
+    printUsage();
     process.exit(1);
   } else if (filePaths.length === 1) {
     console.error("Please provide at least two file paths for comparison.");

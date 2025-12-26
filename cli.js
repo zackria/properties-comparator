@@ -13,7 +13,7 @@ try {
   version = packageJson.version;
 } catch (err) {
   // Use default version if package.json can't be read
-  console.warn('Warning: Could not read version from package.json, using default 1.0.0');
+  console.warn(`Warning: Could not read version from package.json (${err.message}). Using default 1.0.0`);
 }
 
 // Check if no arguments were provided
