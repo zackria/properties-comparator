@@ -60,11 +60,11 @@ function mockConsole(...methods) {
 function restoreMocks(mocks) {
   if (!mocks) return;
   if (Array.isArray(mocks)) {
-    for (const m of mocks) m && m.mockRestore();
+    for (const m of mocks) m?.mockRestore();
   } else {
     for (const key of Object.keys(mocks)) {
       const m = mocks[key];
-      if (m && typeof m.mockRestore === "function") m.mockRestore();
+      m?.mockRestore?.();
     }
   }
 }
@@ -89,6 +89,25 @@ function runWithArgv(argv, fn) {
   } finally {
     process.argv = originalArgv;
   }
+}
+
+/**
+ * Common test file creators to reduce duplication.
+ */
+function createStandardPair(ext = ".properties") {
+  return createTwoTempFiles(`key1=value1\nkey2=value2`, `key1=value1\nkey2=value3`, ext);
+}
+
+function createMatchingPair(ext = ".properties") {
+  return createTwoTempFiles(`key1=value1\nkey2=value2`, `key1=value1\nkey2=value2`, ext);
+}
+
+function createSinglePair(ext = ".properties") {
+  return createTwoTempFiles(`key1=value1`, `key1=value1`, ext);
+}
+
+function createOutputFile(ext) {
+  return createTempFile("", ext);
 }
 
 /**
@@ -157,7 +176,7 @@ describe("compareUtility Tests", () => {
   });
 
   test("compareFileData should handle identical files", () => {
-    const [file1, file2] = createTwoTempFiles(`key1=value1\nkey2=value2`, `key1=value1\nkey2=value2`, ".properties");
+    const [file1, file2] = createMatchingPair();
     const { mismatchCount, mismatchDetails } = compareFileData([file1, file2]);
     expect(mismatchCount).toBe(0);
     expect(mismatchDetails).toEqual([
@@ -167,7 +186,7 @@ describe("compareUtility Tests", () => {
   });
 
   test("compareFileData should detect mismatched keys", () => {
-    const [file1, file2] = createTwoTempFiles(`key1=value1\nkey2=value2`, `key1=value1\nkey2=value3`, ".properties");
+    const [file1, file2] = createStandardPair();
     const { mismatchCount, mismatchDetails } = compareFileData([file1, file2]);
     expect(mismatchCount).toBe(1);
     expect(mismatchDetails).toEqual([
@@ -177,19 +196,19 @@ describe("compareUtility Tests", () => {
   });
 
   test("checkIfAllValuesMatch should return true for matching files", () => {
-    const [file1, file2] = createTwoTempFiles(`key1=value1\nkey2=value2`, `key1=value1\nkey2=value2`, ".properties");
+    const [file1, file2] = createMatchingPair();
     const result = checkIfAllValuesMatch([file1, file2]);
     expect(result).toBe(true);
   });
 
   test("checkIfAllValuesMatch should return false for mismatched files", () => {
-    const [file1, file2] = createTwoTempFiles(`key1=value1\nkey2=value2`, `key1=value1\nkey2=value3`, ".properties");
+    const [file1, file2] = createStandardPair();
     const result = checkIfAllValuesMatch([file1, file2]);
     expect(result).toBe(false);
   });
 
   test("getMismatchFields should return mismatched keys", () => {
-    const [file1, file2] = createTwoTempFiles(`key1=value1\nkey2=value2`, `key1=value1\nkey2=value3`, ".properties");
+    const [file1, file2] = createStandardPair();
     const result = getMismatchFields([file1, file2]);
     expect(result).toEqual(["key2"]);
   });
@@ -237,7 +256,7 @@ describe("compareUtility Tests", () => {
   });
 
   test("run should handle valid file paths with mismatched keys", () => {
-    const [file1, file2] = createTwoTempFiles(`key1=value1\nkey2=value2`, `key1=value1\nkey2=value3`, ".properties");
+    const [file1, file2] = createStandardPair();
     const { table: consoleTableMock, log: consoleLogMock } = mockConsole("table", "log");
     const processExitMock = mockProcessExit();
 
@@ -254,7 +273,7 @@ describe("compareUtility Tests", () => {
   // New tests for report generation
   describe("Report Generation Tests", () => {
     test("generateHtmlReport should create valid HTML report", () => {
-      const [file1, file2] = createTwoTempFiles(`key1=value1\nkey2=value2`, `key1=value1\nkey2=value3`, ".properties");
+      const [file1, file2] = createStandardPair();
       const filePaths = [file1, file2];
       const comparisonData = compareFileData(filePaths);
 
@@ -277,7 +296,7 @@ describe("compareUtility Tests", () => {
     });
 
     test("generateMarkdownReport should create valid Markdown report", () => {
-      const [file1, file2] = createTwoTempFiles(`key1=value1\nkey2=value2`, `key1=value1\nkey2=value3`, ".properties");
+      const [file1, file2] = createStandardPair();
       const filePaths = [file1, file2];
       const comparisonData = compareFileData(filePaths);
 
@@ -303,7 +322,7 @@ describe("compareUtility Tests", () => {
 
   describe("compareFiles Tests", () => {
     test("compareFiles should output to console by default", () => {
-      const [file1, file2] = createTwoTempFiles(`key1=value1\nkey2=value2`, `key1=value1\nkey2=value3`, ".properties");
+      const [file1, file2] = createStandardPair();
       const { log: consoleLogMock, table: consoleTableMock } = mockConsole("log", "table");
 
       compareFiles([file1, file2]);
@@ -315,8 +334,8 @@ describe("compareUtility Tests", () => {
     });
 
     test("compareFiles should generate HTML report when format is html", () => {
-      const [file1, file2] = createTwoTempFiles(`key1=value1\nkey2=value2`, `key1=value1\nkey2=value3`, ".properties");
-      const outputFile = createTempFile("", ".html");
+      const [file1, file2] = createStandardPair();
+      const outputFile = createOutputFile(".html");
 
       const { log: consoleLogMock } = mockConsole("log");
 
@@ -325,16 +344,14 @@ describe("compareUtility Tests", () => {
       // Verify file was written
       const fileContents = fs.readFileSync(outputFile, "utf8");
       expect(fileContents).toContain("<!DOCTYPE html>");
-      expect(fileContents).toContain(
-        "<title>Properties Comparison Report</title>"
-      );
+      expect(fileContents).toContain("<title>Properties Comparison Report</title>");
 
       expect(consoleLogMock).toHaveBeenCalledWith(`HTML report saved to: ${outputFile}`);
       restoreMocks({ log: consoleLogMock });
     });
 
     test("compareFiles should output HTML to console when no outputFile is provided", () => {
-      const [file1, file2] = createTwoTempFiles(`key1=value1\nkey2=value2`, `key1=value1\nkey2=value3`, ".properties");
+      const [file1, file2] = createStandardPair();
 
       const { log: consoleLogMock } = mockConsole("log");
 
@@ -349,8 +366,8 @@ describe("compareUtility Tests", () => {
     });
 
     test("compareFiles should generate Markdown report when format is markdown", () => {
-      const [file1, file2] = createTwoTempFiles(`key1=value1\nkey2=value2`, `key1=value1\nkey2=value3`, ".properties");
-      const outputFile = createTempFile("", ".md");
+      const [file1, file2] = createStandardPair();
+      const outputFile = createOutputFile(".md");
 
       const { log: consoleLogMock } = mockConsole("log");
 
@@ -366,7 +383,7 @@ describe("compareUtility Tests", () => {
     });
 
     test("compareFiles should output Markdown to console when no outputFile is provided", () => {
-      const [file1, file2] = createTwoTempFiles(`key1=value1\nkey2=value2`, `key1=value1\nkey2=value3`, ".properties");
+      const [file1, file2] = createStandardPair();
 
       const { log: consoleLogMock } = mockConsole("log");
 
@@ -381,7 +398,7 @@ describe("compareUtility Tests", () => {
     });
 
     test("compareFiles should fallback to console output for invalid format", () => {
-      const [file1, file2] = createTwoTempFiles(`key1=value1\nkey2=value2`, `key1=value1\nkey2=value3`, ".properties");
+      const [file1, file2] = createStandardPair();
 
       const mocks = mockConsole("log", "table", "error");
 
@@ -397,7 +414,7 @@ describe("compareUtility Tests", () => {
 
   describe("compareProperties Tests", () => {
     test("should compare two files and return comparison data", () => {
-      const [file1, file2] = createTwoTempFiles(`key1=value1\nkey2=value2`, `key1=value1\nkey2=value3`, ".properties");
+      const [file1, file2] = createStandardPair();
 
       const result = compareProperties(file1, file2);
 
@@ -407,8 +424,8 @@ describe("compareUtility Tests", () => {
     });
 
     test("should generate JSON output when json option is true", () => {
-      const [file1, file2] = createTwoTempFiles(`key1=value1`, `key1=value1`, ".properties");
-      const outputFile = createTempFile("", ".json");
+      const [file1, file2] = createSinglePair();
+      const outputFile = createOutputFile(".json");
 
       const { log: consoleLogMock } = mockConsole("log");
 
@@ -423,8 +440,8 @@ describe("compareUtility Tests", () => {
     });
 
     test("should generate HTML output based on file extension", () => {
-      const [file1, file2] = createTwoTempFiles(`key1=value1\nkey2=value2`, `key1=value1\nkey2=value3`, ".properties");
-      const outputFile = createTempFile("", ".html");
+      const [file1, file2] = createStandardPair();
+      const outputFile = createOutputFile(".html");
 
       compareProperties(file1, file2, { output: outputFile });
 
@@ -435,8 +452,8 @@ describe("compareUtility Tests", () => {
     });
 
     test("should generate Markdown output when file has .md extension", () => {
-      const [file1, file2] = createTwoTempFiles(`key1=value1\nkey2=value2`, `key1=value1\nkey2=value3`, ".properties");
-      const outputFile = createTempFile("", ".md");
+      const [file1, file2] = createStandardPair();
+      const outputFile = createOutputFile(".md");
 
       compareProperties(file1, file2, { output: outputFile });
 
@@ -446,8 +463,8 @@ describe("compareUtility Tests", () => {
     });
 
     test("should log output path when verbose option is true", () => {
-      const [file1, file2] = createTwoTempFiles(`key1=value1`, `key1=value1`, ".properties");
-      const outputFile = createTempFile("", ".html");
+      const [file1, file2] = createSinglePair();
+      const outputFile = createOutputFile(".html");
 
       const { log: consoleLogMock } = mockConsole("log");
 
@@ -461,8 +478,8 @@ describe("compareUtility Tests", () => {
 
   describe("Complete Workflow Tests", () => {
     test("run should parse command line arguments with format and output options", () => {
-      const [file1, file2] = createTwoTempFiles(`key1=value1\nkey2=value2`, `key1=value1\nkey2=value3`, ".properties");
-      const outputFile = createTempFile("", ".html");
+      const [file1, file2] = createStandardPair();
+      const outputFile = createOutputFile(".html");
 
       const { log: consoleLogMock } = mockConsole("log");
 
@@ -485,8 +502,8 @@ describe("compareUtility Tests", () => {
     });
 
     test("run should handle short option format (-f, -o)", () => {
-      const [file1, file2] = createTwoTempFiles(`key1=value1\nkey2=value2`, `key1=value1\nkey2=value3`, ".properties");
-      const outputFile = createTempFile("", ".md");
+      const [file1, file2] = createStandardPair();
+      const outputFile = createOutputFile(".md");
 
       const { log: consoleLogMock } = mockConsole("log");
 
