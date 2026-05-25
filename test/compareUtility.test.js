@@ -110,6 +110,19 @@ function createOutputFile(ext) {
   return createTempFile("", ext);
 }
 
+function createStandardComparison() {
+  const filePaths = createStandardPair();
+  return { filePaths, comparisonData: compareFileData(filePaths) };
+}
+
+function readFile(filePath) {
+  return fs.readFileSync(filePath, "utf8");
+}
+
+function expectContainsAll(text, expectedValues) {
+  expectedValues.forEach((value) => expect(text).toContain(value));
+}
+
 /**
  * Clean up *all* temp files after *all* tests and describes are done.
  * This must be at the top level so it catches files from both describe blocks.
@@ -272,51 +285,41 @@ describe("compareUtility Tests", () => {
 
   // New tests for report generation
   describe("Report Generation Tests", () => {
-    test("generateHtmlReport should create valid HTML report", () => {
-      const [file1, file2] = createStandardPair();
-      const filePaths = [file1, file2];
-      const comparisonData = compareFileData(filePaths);
+    const reportCases = [
+      {
+        name: "generateHtmlReport should create valid HTML report",
+        generate: generateHtmlReport,
+        expected: [
+          "<!DOCTYPE html>",
+          '<html lang="en">',
+          "<title>Properties Comparison Report</title>",
+        ],
+      },
+      {
+        name: "generateMarkdownReport should create valid Markdown report",
+        generate: generateMarkdownReport,
+        expected: [
+          "# Properties Comparison Report",
+          "## Files Compared",
+          "## Comparison Results",
+          "| Key | Matched |",
+        ],
+      },
+    ];
 
-      const htmlReport = generateHtmlReport(filePaths, comparisonData);
+    test.each(reportCases)("$name", ({ generate, expected }) => {
+      const { filePaths, comparisonData } = createStandardComparison();
+      const report = generate(filePaths, comparisonData);
 
-      // Check basic structure
-      expect(htmlReport).toContain("<!DOCTYPE html>");
-      expect(htmlReport).toContain('<html lang="en">');
-      expect(htmlReport).toContain(
-        "<title>Properties Comparison Report</title>"
-      );
-
-      // Check content
-      expect(htmlReport).toContain("key1");
-      expect(htmlReport).toContain("key2");
-      expect(htmlReport).toContain("value1");
-      expect(htmlReport).toContain("value2");
-      expect(htmlReport).toContain("value3");
-      expect(htmlReport).toContain("1 key(s) have mismatched values");
-    });
-
-    test("generateMarkdownReport should create valid Markdown report", () => {
-      const [file1, file2] = createStandardPair();
-      const filePaths = [file1, file2];
-      const comparisonData = compareFileData(filePaths);
-
-      const mdReport = generateMarkdownReport(filePaths, comparisonData);
-
-      // Check structure
-      expect(mdReport).toContain("# Properties Comparison Report");
-      expect(mdReport).toContain("## Files Compared");
-      expect(mdReport).toContain("## Comparison Results");
-
-      // Check table format
-      expect(mdReport).toContain("| Key | Matched |");
-
-      // Check content
-      expect(mdReport).toContain("key1");
-      expect(mdReport).toContain("key2");
-      expect(mdReport).toContain("value1");
-      expect(mdReport).toContain("value2");
-      expect(mdReport).toContain("value3");
-      expect(mdReport).toContain("1 key(s) have mismatched values");
+      expectContainsAll(report, [
+        ...expected,
+        "key1",
+        "key2",
+        "value1",
+        "value2",
+        "value3",
+        "1 key(s) have mismatched values",
+      ]);
     });
   });
 
@@ -334,7 +337,7 @@ describe("compareUtility Tests", () => {
         name: "html file",
         opts: { format: "html", outputExt: ".html" },
         expect: (mocks, out) => {
-          const contents = fs.readFileSync(out, "utf8");
+          const contents = readFile(out);
           expect(contents).toContain("<!DOCTYPE html>");
           expect(contents).toContain("<title>Properties Comparison Report</title>");
           expect(mocks.log).toHaveBeenCalledWith(`HTML report saved to: ${out}`);
@@ -353,7 +356,7 @@ describe("compareUtility Tests", () => {
         name: "markdown file",
         opts: { format: "markdown", outputExt: ".md" },
         expect: (mocks, out) => {
-          const contents = fs.readFileSync(out, "utf8");
+          const contents = readFile(out);
           expect(contents).toContain("# Properties Comparison Report");
           expect(mocks.log).toHaveBeenCalledWith(`Markdown report saved to: ${out}`);
         },
@@ -418,34 +421,23 @@ describe("compareUtility Tests", () => {
       compareProperties(file1, file2, { output: outputFile, json: true });
 
       // Verify JSON was written
-      const fileContents = fs.readFileSync(outputFile, "utf8");
+      const fileContents = readFile(outputFile);
       const jsonData = JSON.parse(fileContents);
       expect(jsonData.mismatchCount).toBe(0);
 
       restoreMocks({ log: consoleLogMock });
     });
 
-    test("should generate HTML output based on file extension", () => {
+    test.each([
+      [".html", ["<!DOCTYPE html>", "Properties Comparison Report"]],
+      [".md", ["# Properties Comparison Report"]],
+    ])("should generate %s output based on file extension", (ext, expected) => {
       const [file1, file2] = createStandardPair();
-      const outputFile = createOutputFile(".html");
+      const outputFile = createOutputFile(ext);
 
       compareProperties(file1, file2, { output: outputFile });
 
-      // Verify HTML was written
-      const fileContents = fs.readFileSync(outputFile, "utf8");
-      expect(fileContents).toContain("<!DOCTYPE html>");
-      expect(fileContents).toContain("Properties Comparison Report");
-    });
-
-    test("should generate Markdown output when file has .md extension", () => {
-      const [file1, file2] = createStandardPair();
-      const outputFile = createOutputFile(".md");
-
-      compareProperties(file1, file2, { output: outputFile });
-
-      // Verify Markdown was written
-      const fileContents = fs.readFileSync(outputFile, "utf8");
-      expect(fileContents).toContain("# Properties Comparison Report");
+      expectContainsAll(readFile(outputFile), expected);
     });
 
     test("should log output path when verbose option is true", () => {
@@ -463,50 +455,35 @@ describe("compareUtility Tests", () => {
   });
 
   describe("Complete Workflow Tests", () => {
-    test("run should parse command line arguments with format and output options", () => {
+    test.each([
+      {
+        name: "long option format",
+        args: ["--format", "html", "--output"],
+        outputExt: ".html",
+        expectedContent: "<!DOCTYPE html>",
+      },
+      {
+        name: "short option format",
+        args: ["-f", "markdown", "-o"],
+        outputExt: ".md",
+        expectedContent: "# Properties Comparison Report",
+      },
+    ])("run should handle $name", ({ args, outputExt, expectedContent }) => {
       const [file1, file2] = createStandardPair();
-      const outputFile = createOutputFile(".html");
+      const outputFile = createOutputFile(outputExt);
 
       const { log: consoleLogMock } = mockConsole("log");
 
       runWithArgv([
         "node",
         "compareUtility.js",
-        "--format",
-        "html",
-        "--output",
+        ...args,
         outputFile,
         file1,
         file2,
       ], () => run());
 
-      // Verify output file was written
-      const fileContents = fs.readFileSync(outputFile, "utf8");
-      expect(fileContents).toContain("<!DOCTYPE html>");
-
-      restoreMocks({ log: consoleLogMock });
-    });
-
-    test("run should handle short option format (-f, -o)", () => {
-      const [file1, file2] = createStandardPair();
-      const outputFile = createOutputFile(".md");
-
-      const { log: consoleLogMock } = mockConsole("log");
-
-      runWithArgv([
-        "node",
-        "compareUtility.js",
-        "-f",
-        "markdown",
-        "-o",
-        outputFile,
-        file1,
-        file2,
-      ], () => run());
-
-      // Verify output file was written
-      const fileContents = fs.readFileSync(outputFile, "utf8");
-      expect(fileContents).toContain("# Properties Comparison Report");
+      expect(readFile(outputFile)).toContain(expectedContent);
 
       restoreMocks({ log: consoleLogMock });
     });
