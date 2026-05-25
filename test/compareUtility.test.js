@@ -321,92 +321,78 @@ describe("compareUtility Tests", () => {
   });
 
   describe("compareFiles Tests", () => {
-    test("compareFiles should output to console by default", () => {
+    const compareCases = [
+      {
+        name: "console default",
+        opts: {},
+        expect: (mocks, out) => {
+          expect(mocks.log).toHaveBeenCalled();
+          expect(mocks.table).toHaveBeenCalled();
+        },
+      },
+      {
+        name: "html file",
+        opts: { format: "html", outputExt: ".html" },
+        expect: (mocks, out) => {
+          const contents = fs.readFileSync(out, "utf8");
+          expect(contents).toContain("<!DOCTYPE html>");
+          expect(contents).toContain("<title>Properties Comparison Report</title>");
+          expect(mocks.log).toHaveBeenCalledWith(`HTML report saved to: ${out}`);
+        },
+      },
+      {
+        name: "html console",
+        opts: { format: "html" },
+        expect: (mocks) => {
+          const calls = mocks.log.mock.calls.flat();
+          const html = calls.find((c) => typeof c === "string" && c.includes("<!DOCTYPE html>"));
+          expect(html).toBeDefined();
+        },
+      },
+      {
+        name: "markdown file",
+        opts: { format: "markdown", outputExt: ".md" },
+        expect: (mocks, out) => {
+          const contents = fs.readFileSync(out, "utf8");
+          expect(contents).toContain("# Properties Comparison Report");
+          expect(mocks.log).toHaveBeenCalledWith(`Markdown report saved to: ${out}`);
+        },
+      },
+      {
+        name: "markdown console",
+        opts: { format: "markdown" },
+        expect: (mocks) => {
+          const calls = mocks.log.mock.calls.flat();
+          const md = calls.find((c) => typeof c === "string" && c.includes("# Properties Comparison Report"));
+          expect(md).toBeDefined();
+        },
+      },
+      {
+        name: "invalid format",
+        opts: { format: "invalid" },
+        expect: (mocks) => {
+          expect(mocks.error).toHaveBeenCalledWith(expect.stringContaining("Unsupported format: invalid"));
+          expect(mocks.log).toHaveBeenCalled();
+          expect(mocks.table).toHaveBeenCalled();
+        },
+      },
+    ];
+
+    test.each(compareCases)('$name', (c) => {
       const [file1, file2] = createStandardPair();
-      const { log: consoleLogMock, table: consoleTableMock } = mockConsole("log", "table");
-
-      compareFiles([file1, file2]);
-
-      expect(consoleLogMock).toHaveBeenCalled();
-      expect(consoleTableMock).toHaveBeenCalled();
-
-      restoreMocks({ log: consoleLogMock, table: consoleTableMock });
-    });
-
-    test("compareFiles should generate HTML report when format is html", () => {
-      const [file1, file2] = createStandardPair();
-      const outputFile = createOutputFile(".html");
-
-      const { log: consoleLogMock } = mockConsole("log");
-
-      compareFiles([file1, file2], { format: "html", outputFile });
-
-      // Verify file was written
-      const fileContents = fs.readFileSync(outputFile, "utf8");
-      expect(fileContents).toContain("<!DOCTYPE html>");
-      expect(fileContents).toContain("<title>Properties Comparison Report</title>");
-
-      expect(consoleLogMock).toHaveBeenCalledWith(`HTML report saved to: ${outputFile}`);
-      restoreMocks({ log: consoleLogMock });
-    });
-
-    test("compareFiles should output HTML to console when no outputFile is provided", () => {
-      const [file1, file2] = createStandardPair();
-
-      const { log: consoleLogMock } = mockConsole("log");
-
-      compareFiles([file1, file2], { format: "html" });
-
-      // Should log the HTML to console
-      const calls = consoleLogMock.mock.calls.flat();
-      const htmlOutput = calls.find((arg) => typeof arg === "string" && arg.includes("<!DOCTYPE html>"));
-      expect(htmlOutput).toBeDefined();
-
-      restoreMocks({ log: consoleLogMock });
-    });
-
-    test("compareFiles should generate Markdown report when format is markdown", () => {
-      const [file1, file2] = createStandardPair();
-      const outputFile = createOutputFile(".md");
-
-      const { log: consoleLogMock } = mockConsole("log");
-
-      compareFiles([file1, file2], { format: "markdown", outputFile });
-
-      // Verify file was written
-      const fileContents = fs.readFileSync(outputFile, "utf8");
-      expect(fileContents).toContain("# Properties Comparison Report");
-
-      expect(consoleLogMock).toHaveBeenCalledWith(`Markdown report saved to: ${outputFile}`);
-
-      restoreMocks({ log: consoleLogMock });
-    });
-
-    test("compareFiles should output Markdown to console when no outputFile is provided", () => {
-      const [file1, file2] = createStandardPair();
-
-      const { log: consoleLogMock } = mockConsole("log");
-
-      compareFiles([file1, file2], { format: "markdown" });
-
-      // Should log the Markdown to console
-      const calls = consoleLogMock.mock.calls.flat();
-      const mdOutput = calls.find((arg) => typeof arg === "string" && arg.includes("# Properties Comparison Report"));
-      expect(mdOutput).toBeDefined();
-
-      restoreMocks({ log: consoleLogMock });
-    });
-
-    test("compareFiles should fallback to console output for invalid format", () => {
-      const [file1, file2] = createStandardPair();
-
       const mocks = mockConsole("log", "table", "error");
 
-      compareFiles([file1, file2], { format: "invalid" });
+      let out = null;
+      const opts = {};
+      if (c.opts.format) opts.format = c.opts.format;
+      if (c.opts.outputExt) {
+        out = createOutputFile(c.opts.outputExt);
+        opts.outputFile = out;
+      }
 
-      expect(mocks.error).toHaveBeenCalledWith(expect.stringContaining("Unsupported format: invalid"));
-      expect(mocks.log).toHaveBeenCalled();
-      expect(mocks.table).toHaveBeenCalled();
+      compareFiles([file1, file2], opts);
+
+      c.expect(mocks, out);
 
       restoreMocks(mocks);
     });
