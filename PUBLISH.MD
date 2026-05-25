@@ -8,6 +8,8 @@
 
 `npm link properties-comparator`
 
+`npm unlink properties-comparator`
+
 ## Now you can run the script globally using:
 
 ```properties-comparator <filePath1> <filePath2>```
