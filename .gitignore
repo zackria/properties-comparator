@@ -131,3 +131,5 @@ dist
 .qodo
 package-lock.json
 package-lock.json
+report.html
+report.md
